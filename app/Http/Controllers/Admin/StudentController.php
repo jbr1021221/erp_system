@@ -9,15 +9,21 @@ use App\Models\Section;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class StudentController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class StudentController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware('permission:student-list', ['only' => ['index']]);
-        $this->middleware('permission:student-create', ['only' => ['create', 'store']]);
-        $this->middleware('permission:student-edit', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:student-delete', ['only' => ['destroy']]);
+        return [
+            new Middleware('permission:student-list', only: ['index']),
+            new Middleware('permission:student-create', only: ['create', 'store']),
+            new Middleware('permission:student-edit', only: ['edit', 'update']),
+            new Middleware('permission:student-delete', only: ['destroy']),
+        ];
     }
+
 
     public function index(Request $request)
     {
