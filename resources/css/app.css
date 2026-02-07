@@ -152,6 +152,11 @@
     border-color: rgb(30 41 59) !important; /* slate-800 */
 }
 
+[data-theme="dark"] .border-slate-300,
+[data-theme="dark"] .border-gray-300 {
+    border-color: rgb(71 85 105) !important; /* slate-600 */
+}
+
 /* ============================================
    DARK MODE COLORED BACKGROUND OVERRIDES
    ============================================ */
