@@ -22,6 +22,13 @@ class RolePermissionSeeder extends Seeder
             'student-edit',
             'student-delete',
             'student-view',
+
+            // Teacher permissions
+            'teacher-list',
+            'teacher-create',
+            'teacher-edit',
+            'teacher-delete',
+            'teacher-view',
             
             // Payment permissions
             'payment-list',
@@ -73,6 +80,20 @@ class RolePermissionSeeder extends Seeder
             'dashboard-teacher',
             'dashboard-student',
             'dashboard-parent',
+
+            // System Settings
+            'setting-list',
+            'setting-edit',
+
+            // Fee Structure
+            'fee-list',
+            'fee-structure-create',
+            'fee-structure-edit',
+            'fee-structure-delete',
+
+            // Reports
+            'report-view',
+            'report-income',
         ];
 
         foreach ($permissions as $permission) {
@@ -89,11 +110,14 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::firstOrCreate(['name' => 'Admin']);
         $admin->syncPermissions([
             'student-list', 'student-create', 'student-edit', 'student-view',
+            'teacher-list', 'teacher-create', 'teacher-edit', 'teacher-view',
             'payment-list', 'payment-create', 'payment-view',
             'class-list', 'class-create', 'class-edit',
             'user-list', 'user-create', 'user-edit',
             'expense-list', 'expense-view',
             'report-view', 'report-export',
+            'setting-list', 'setting-edit',
+            'fee-list', 'fee-structure-create', 'fee-structure-edit', 'fee-structure-delete',
             'dashboard-admin',
         ]);
 

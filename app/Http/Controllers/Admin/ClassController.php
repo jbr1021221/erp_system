@@ -73,7 +73,7 @@ class ClassController extends Controller implements HasMiddleware
      */
     public function show(Classes $class)
     {
-        $class->load(['classTeacher', 'sections', 'students']);
+        $class->load(['classTeacher', 'sections', 'students', 'feeStructures']);
         return view('classes.show', compact('class'));
     }
 
@@ -120,5 +120,34 @@ class ClassController extends Controller implements HasMiddleware
 
         return redirect()->route('classes.index')
             ->with('success', 'Class deleted successfully.');
+    }
+    /**
+     * Store a newly created section for the class.
+     */
+    public function storeSection(Request $request, Classes $class)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'capacity' => 'nullable|integer|min:1',
+            'room_number' => 'nullable|string|max:50',
+        ]);
+
+        $class->sections()->create($validated);
+
+        return back()->with('success', 'Section added successfully.');
+    }
+
+    /**
+     * Remove the specified section.
+     */
+    public function destroySection(Classes $class, Section $section)
+    {
+        if ($section->students()->count() > 0) {
+            return back()->with('error', 'Cannot delete section with enrolled students.');
+        }
+
+        $section->delete();
+
+        return back()->with('success', 'Section deleted successfully.');
     }
 }

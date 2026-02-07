@@ -25,4 +25,9 @@ class Classes extends Model
     {
         return $this->hasMany(Section::class, 'class_id');
     }
+
+    public function feeStructures()
+    {
+        return $this->hasMany(FeeStructure::class, 'class_id');
+    }
 }

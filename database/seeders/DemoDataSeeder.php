@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Vendor;
+use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 
@@ -68,6 +69,23 @@ class DemoDataSeeder extends Seeder
                         'capacity' => 40
                     ]
                 );
+            }
+        }
+
+        // 2.5 Create Teachers
+        $designations = ['Senior Teacher', 'Assistant Teacher', 'Lecturer', 'Head of Department', 'Junior Teacher'];
+        if (Teacher::count() < 10) {
+            for ($i = 1; $i <= 10; $i++) {
+                Teacher::create([
+                    'name' => 'Teacher ' . $i,
+                    'email' => 'teacher' . $i . '@school.com',
+                    'phone' => '01' . rand(100000000, 999999999),
+                    'designation' => $designations[array_rand($designations)],
+                    'join_date' => Carbon::now()->subMonths(rand(6, 48)),
+                    'salary' => rand(25000, 75000),
+                    'address' => 'Teachers Colony, Road ' . $i,
+                    'is_active' => true,
+                ]);
             }
         }
 

@@ -14,6 +14,7 @@ class Payment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'amount' => 'decimal:2',
+        'billing_month' => 'integer',
     ];
 
     public function student()
@@ -24,5 +25,10 @@ class Payment extends Model
     public function receivedBy()
     {
         return $this->belongsTo(User::class, 'received_by');
+    }
+
+    public function feeStructure()
+    {
+        return $this->belongsTo(FeeStructure::class);
     }
 }

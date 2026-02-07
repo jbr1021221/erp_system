@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('class_id')->constrained()->onDelete('cascade');
             $table->string('fee_type'); // Tuition, Admission, Transport, etc.
             $table->decimal('amount', 10, 2);
-            $table->enum('frequency', ['one_time', 'monthly', 'quarterly', 'yearly']);
+            $table->enum('frequency', ['one_time', 'monthly', 'quarterly', 'half_yearly', 'yearly']);
             $table->string('academic_year');
             $table->boolean('is_mandatory')->default(true);
             $table->timestamps();

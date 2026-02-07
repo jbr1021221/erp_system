@@ -51,6 +51,11 @@ class Student extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function feeAssignments()
+    {
+        return $this->hasMany(StudentFeeAssignment::class);
+    }
+
     // Accessors
     public function getFullNameAttribute()
     {

@@ -3,125 +3,152 @@
 @section('title', 'Classes - ERP System')
 
 @section('content')
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="md:flex md:items-center md:justify-between mb-8">
-            <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                    Academic Classes
-                </h2>
-                <p class="mt-1 text-sm text-gray-500">
-                    Manage classes, sections, and assign class teachers.
-                </p>
-            </div>
-            @can('class-create')
-            <div class="mt-4 flex md:mt-0 md:ml-4">
-                <a href="{{ route('classes.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    New Class
-                </a>
-            </div>
-            @endcan
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="flex-1 min-w-0">
+             <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate tracking-tight">
+                Academic Classes
+            </h2>
+             <p class="mt-1 text-sm text-slate-500">
+                Manage your academic structure, classes, and sections.
+            </p>
         </div>
+        @can('class-create')
+        <div class="mt-4 flex md:mt-0 md:ml-4">
+            <a href="{{ route('classes.create') }}" class="group inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all duration-200">
+                <svg class="-ml-1 mr-2 h-5 w-5 text-slate-100 group-hover:text-white transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create Class
+            </a>
+        </div>
+        @endcan
+    </div>
 
-        <!-- Class List -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse($classes as $class)
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
-                <div class="p-6">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <h3 class="text-lg font-bold text-gray-900">{{ $class->name }}</h3>
-                                @if(!$class->is_active)
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                        Inactive
-                                    </span>
-                                @endif
-                            </div>
-                            <p class="text-xs text-gray-500 mt-1">Code: {{ $class->code }}</p>
-                        </div>
-                        <div class="dropdown relative" x-data="{ open: false }">
-                            <button @click="open = !open" @click.away="open = false" class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                </svg>
-                            </button>
-                            <div x-show="open" class="dropdown-menu absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-10" style="display: none;">
-                                @can('class-edit')
-                                <a href="{{ route('classes.edit', $class) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit Class</a>
-                                @endcan
-                                @can('class-delete')
-                                <form action="{{ route('classes.destroy', $class) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" onclick="return confirm('Are you sure?')">Delete Class</button>
-                                </form>
-                                @endcan
-                            </div>
-                        </div>
+    <!-- Class Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @forelse($classes as $class)
+        <div class="group bg-slate-50 rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative">
+            
+            <!-- Colorful Top Bar (Randomize colors or based on ID) -->
+            <div class="h-2 w-full bg-gradient-to-r from-slate-600 via-purple-500 to-pink-500"></div>
+
+            <div class="p-5">
+                <!-- Header -->
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 group-hover:text-slate-900 transition-colors">
+                            <a href="{{ route('classes.show', $class) }}">{{ $class->name }}</a>
+                        </h3>
+                        <p class="text-xs font-mono text-slate-400 mt-1">{{ $class->code }}</p>
                     </div>
                     
-                    <div class="mt-4">
-                        <div class="flex items-center text-sm text-gray-600 mb-2">
-                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" @click.away="open = false" class="text-slate-300 hover:text-slate-600 transition-colors">
+                            <svg class="h-6 w-6" fill="navajowhite" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                             </svg>
-                            {{ $class->classTeacher->name ?? 'No Class Teacher' }}
-                        </div>
-                        <div class="flex items-center text-sm text-gray-600">
-                             <span class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 flex items-center justify-center font-bold text-xs border border-gray-300 rounded-full">S</span>
-                             {{ $class->sections->count() }} Sections
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4 border-t border-gray-100 pt-4">
-                        <div class="flex flex-wrap gap-2">
-                            @forelse($class->sections as $section)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700">
-                                    {{ $section->name }}
-                                </span>
-                            @empty
-                                <span class="text-xs text-gray-400 italic">No sections added</span>
-                            @endforelse
+                        </button>
+                         <div x-show="open" class="absolute right-0 mt-2 w-48 rounded-xl shadow-xl bg-slate-50 ring-1 ring-black ring-opacity-5 z-20 py-2 border border-slate-200" style="display: none;" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95">
+                             <a href="{{ route('classes.show', $class) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">
+                                 View Details
+                             </a>
+                            @can('class-edit')
+                            <a href="{{ route('classes.edit', $class) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900">Edit Class</a>
+                            @endcan
+                            @can('class-delete')
+                            <div class="border-t border-slate-200 my-1"></div>
+                            <form action="{{ route('classes.destroy', $class) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" onclick="return confirm('Are you sure?')">Delete Class</button>
+                            </form>
+                            @endcan
                         </div>
                     </div>
                 </div>
-                <div class="bg-gray-50 px-6 py-3 border-t border-gray-100">
-                    <div class="text-xs text-gray-500">
-                        Academic Year: <span class="font-medium text-gray-900">{{ $class->academic_year }}</span>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 gap-6 mb-4">
+                    <div class="bg-slate-100 rounded-xl p-3 text-center">
+                        <span class="block text-2xl font-bold text-slate-900">{{ $class->students_count ?? 0 }}</span>
+                        <span class="text-xs font-medium text-slate-500 uppercase tracking-wide">Students</span>
+                    </div>
+                    <div class="bg-pink-50 rounded-xl p-3 text-center">
+                        <span class="block text-2xl font-bold text-pink-700">{{ $class->capacity }}</span>
+                        <span class="text-xs font-medium text-pink-500 uppercase tracking-wide">Capacity</span>
                     </div>
                 </div>
-            </div>
-            @empty
-            <div class="col-span-full">
-                <div class="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-100">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">No classes</h3>
-                    <p class="mt-1 text-sm text-gray-500">Get started by creating a new class.</p>
-                    <div class="mt-6">
-                        @can('class-create')
-                        <a href="{{ route('classes.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                            </svg>
-                            Create Class
-                        </a>
-                        @endcan
-                    </div>
-                </div>
-            </div>
-            @endforelse
-        </div>
 
-        <div class="mt-6">
-             {{ $classes->links() }}
+                <!-- Teacher -->
+                <div class="flex items-center space-x-3 mb-4 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                     <div class="flex-shrink-0">
+                         <div class="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
+                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                             </svg>
+                         </div>
+                     </div>
+                     <div class="min-w-0">
+                         <p class="text-xs text-slate-500 font-medium uppercase">Class Teacher</p>
+                         <p class="text-sm font-semibold text-slate-900 truncate">{{ $class->classTeacher->name ?? 'Not Assigned' }}</p>
+                     </div>
+                </div>
+
+                <!-- Footer / Sections -->
+                <div class="border-t border-slate-100 pt-4">
+                    <p class="text-xs font-semibold text-slate-400 uppercase mb-2">Active Sections</p>
+                    <div class="flex flex-wrap gap-2">
+                        @forelse($class->sections->take(3) as $section)
+                            <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
+                                {{ $section->name }}
+                            </span>
+                        @empty
+                            <span class="text-xs text-slate-400 italic">No sections</span>
+                        @endforelse
+                        
+                        @if($class->sections->count() > 3)
+                            <span class="inline-flex items-center px-2 py-1 rounded bg-slate-50 text-slate-500 text-xs font-medium">
+                                +{{ $class->sections->count() - 3 }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Inactive Overlay -->
+             @if(!$class->is_active)
+            <div class="absolute inset-x-0 top-0 bg-red-500 text-white text-xs font-bold px-3 py-1 text-center">
+                INACTIVE
+            </div>
+            @endif
         </div>
+        @empty
+        <div class="col-span-full">
+            <div class="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-300">
+                <div class="mx-auto h-24 w-24 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                </div>
+                <h3 class="mt-2 text-lg font-bold text-slate-900">No classes found</h3>
+                <p class="mt-1 text-sm text-slate-500 max-w-sm mx-auto">Get started by creating your first academic class structure.</p>
+                <div class="mt-8">
+                    @can('class-create')
+                    <a href="{{ route('classes.create') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-lg font-medium rounded-full shadow-sm text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all transform hover:scale-105">
+                        Create New Class
+                    </a>
+                    @endcan
+                </div>
+            </div>
+        </div>
+        @endforelse
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-6">
+            {{ $classes->links() }}
     </div>
 </div>
 @endsection

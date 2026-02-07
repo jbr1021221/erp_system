@@ -26,13 +26,25 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill($validated);
+
+        if ($request->hasFile('photo')) {
+            if ($user->photo) {
+                // Ideally use Storage::delete, but need to make sure 'public' disk is used everywhere
+                // keeping it simple and safe for now, assuming standard storage link
+                // Storage::disk('public')->delete($user->photo);
+            }
+            $user->photo = $request->file('photo')->store('users', 'public');
         }
 
-        $request->user()->save();
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

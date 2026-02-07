@@ -1,32 +1,319 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
     html {
-        font-family: 'Instrument Sans', sans-serif;
+        font-family: 'Outfit', sans-serif;
+    }
+    
+    /* ============================================
+       THEME VARIABLES - Light Mode (Default)
+       ============================================ */
+    :root {
+        /* Background Colors - Subtle Blue Tint */
+        --bg-primary: 226 232 245;        /* Darker blue-gray */
+        --bg-secondary: 218 225 240;      /* Medium blue-gray */
+        --bg-tertiary: 255 255 255;       /* white */
+        --bg-elevated: 255 255 255;       /* white */
+        --bg-sidebar: 15 23 42;           /* slate-900 */
+        --bg-sidebar-hover: 30 41 59;     /* slate-800 */
+        
+        /* Text Colors */
+        --text-primary: 15 23 42;         /* slate-900 */
+        --text-secondary: 71 85 105;      /* slate-600 */
+        --text-tertiary: 148 163 184;     /* slate-400 */
+        --text-inverse: 255 255 255;      /* white */
+        
+        /* Border Colors */
+        --border-primary: 226 232 240;    /* slate-200 */
+        --border-secondary: 241 245 249;  /* slate-100 */
+        --border-tertiary: 248 250 252;   /* slate-50 */
+        
+        /* Accent Colors */
+        --accent-primary: 99 102 241;     /* indigo-500 */
+        --accent-hover: 79 70 229;        /* indigo-600 */
+        --accent-light: 238 242 255;      /* indigo-50 */
+        
+        /* Status Colors */
+        --success: 34 197 94;             /* emerald-500 */
+        --success-light: 236 253 245;     /* emerald-50 */
+        --warning: 251 146 60;            /* orange-400 */
+        --warning-light: 255 247 237;     /* orange-50 */
+        --error: 239 68 68;               /* red-500 */
+        --error-light: 254 242 242;       /* red-50 */
+        
+        /* Shadow & Effects */
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        
+        /* Glass Effect */
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.18);
+        --glass-blur: 20px;
+    }
+    
+    /* ============================================
+       THEME VARIABLES - Dark Mode
+       ============================================ */
+    [data-theme="dark"] {
+        /* Background Colors */
+        --bg-primary: 15 23 42;           /* slate-900 */
+        --bg-secondary: 30 41 59;         /* slate-800 */
+        --bg-tertiary: 51 65 85;          /* slate-700 */
+        --bg-elevated: 30 41 59;          /* slate-800 */
+        --bg-sidebar: 2 6 23;             /* slate-950 */
+        --bg-sidebar-hover: 15 23 42;     /* slate-900 */
+        
+        /* Text Colors */
+        --text-primary: 248 250 252;      /* slate-50 */
+        --text-secondary: 203 213 225;    /* slate-300 */
+        --text-tertiary: 148 163 184;     /* slate-400 */
+        --text-inverse: 15 23 42;         /* slate-900 */
+        
+        /* Border Colors */
+        --border-primary: 51 65 85;       /* slate-700 */
+        --border-secondary: 30 41 59;     /* slate-800 */
+        --border-tertiary: 15 23 42;      /* slate-900 */
+        
+        /* Accent Colors */
+        --accent-primary: 129 140 248;    /* indigo-400 */
+        --accent-hover: 99 102 241;       /* indigo-500 */
+        --accent-light: 30 27 75;         /* indigo-950 */
+        
+        /* Status Colors */
+        --success: 52 211 153;            /* emerald-400 */
+        --success-light: 6 78 59;         /* emerald-950 */
+        --warning: 251 146 60;            /* orange-400 */
+        --warning-light: 67 20 7;         /* orange-950 */
+        --error: 248 113 113;             /* red-400 */
+        --error-light: 69 10 10;          /* red-950 */
+        
+        /* Shadow & Effects */
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6);
+        
+        /* Glass Effect */
+        --glass-bg: rgba(30, 41, 59, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --glass-blur: 20px;
     }
 }
 
-.bg-glass {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: saturate(180%) blur(20px);
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+@layer components {
+    /* Glass Morphism */
+    .bg-glass {
+        background: var(--glass-bg);
+        backdrop-filter: saturate(180%) blur(var(--glass-blur));
+        border: 1px solid var(--glass-border);
+    }
+    
+    /* Premium Card */
+    .card-premium {
+        background: rgb(var(--bg-elevated));
+        border: 1px solid rgb(var(--border-primary));
+        border-radius: 1rem;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-premium:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+    
+    /* Button Variants */
+    .btn-primary {
+        background: rgb(var(--accent-primary));
+        color: rgb(var(--text-inverse));
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-primary:hover {
+        background: rgb(var(--accent-hover));
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+    
+    /* Input Styles */
+    .input-premium {
+        background: rgb(var(--bg-tertiary));
+        border: 1px solid rgb(var(--border-primary));
+        color: rgb(var(--text-primary));
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .input-premium:focus {
+        outline: none;
+        border-color: rgb(var(--accent-primary));
+        box-shadow: 0 0 0 3px rgba(var(--accent-primary), 0.1);
+    }
+    
+    /* Badge */
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .badge-primary {
+        background: rgb(var(--accent-light));
+        color: rgb(var(--accent-primary));
+        border: 1px solid rgba(var(--accent-primary), 0.2);
+    }
+    
+    .badge-success {
+        background: rgb(var(--success-light));
+        color: rgb(var(--success));
+        border: 1px solid rgba(var(--success), 0.2);
+    }
+    
+    .badge-warning {
+        background: rgb(var(--warning-light));
+        color: rgb(var(--warning));
+        border: 1px solid rgba(var(--warning), 0.2);
+    }
+    
+    .badge-error {
+        background: rgb(var(--error-light));
+        color: rgb(var(--error));
+        border: 1px solid rgba(var(--error), 0.2);
+    }
 }
 
-/* Custom Scrollbar */
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
+
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: rgb(var(--bg-secondary));
 }
+
 ::-webkit-scrollbar-thumb {
-    background: #c7c7c7;
+    background: rgb(var(--border-primary));
     border-radius: 4px;
+    transition: background 0.2s ease;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    background: rgb(var(--text-tertiary));
+}
+
+/* ============================================
+   SMOOTH THEME TRANSITIONS
+   ============================================ */
+* {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Exclude transitions for specific elements */
+button, a, input, select, textarea {
+    transition-property: all;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ============================================
+   PREMIUM EFFECTS
+   ============================================ */
+.glow-effect {
+    box-shadow: 0 0 20px rgba(var(--accent-primary), 0.3);
+}
+
+.gradient-border {
+    position: relative;
+    background: rgb(var(--bg-elevated));
+    border-radius: 1rem;
+}
+
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    padding: 2px;
+    background: linear-gradient(135deg, rgb(var(--accent-primary)), rgb(var(--accent-hover)));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+@media (max-width: 768px) {
+    .card-premium {
+        border-radius: 0.75rem;
+    }
+    
+    .btn-primary {
+        padding: 0.5rem 1rem;
+        font-size: 0.8125rem;
+    }
 }
