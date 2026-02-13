@@ -167,6 +167,68 @@
 
 @push('styles')
 <style>
+    /* Dark Mode Overrides for Receipt */
+    [data-theme="dark"] #receipt-content {
+        background-color: rgb(30 41 59) !important; /* slate-800 */
+        border-color: rgb(51 65 85) !important; /* slate-700 */
+    }
+    
+    [data-theme="dark"] #receipt-content .bg-slate-50 {
+        background-color: rgb(15 23 42) !important; /* slate-900 */
+        border-color: rgb(51 65 85) !important;
+    }
+    
+    [data-theme="dark"] #receipt-content .border-slate-200,
+    [data-theme="dark"] #receipt-content .divide-slate-200 {
+        border-color: rgb(51 65 85) !important; /* slate-700 */
+    }
+    
+    [data-theme="dark"] #receipt-content .divide-slate-100 {
+        border-color: rgb(30 41 59) !important; /* slate-800 */
+    }
+    
+    [data-theme="dark"] #receipt-content .text-slate-500,
+    [data-theme="dark"] #receipt-content .text-slate-400 {
+        color: rgb(148 163 184) !important; /* slate-400 */
+    }
+    
+    [data-theme="dark"] #receipt-content .text-slate-700,
+    [data-theme="dark"] #receipt-content .text-slate-900 {
+        color: rgb(248 250 252) !important; /* slate-50 */
+    }
+    
+    [data-theme="dark"] #receipt-content .text-slate-600 {
+        color: rgb(203 213 225) !important; /* slate-300 */
+    }
+    
+    [data-theme="dark"] #receipt-content .bg-white {
+        background-color: rgb(30 41 59) !important; /* slate-800 */
+    }
+    
+    [data-theme="dark"] #receipt-content tbody {
+        background-color: rgb(30 41 59) !important; /* slate-800 */
+    }
+    
+    [data-theme="dark"] #receipt-content .bg-indigo-50 {
+        background-color: rgb(30 27 75) !important; /* indigo-950 */
+    }
+    
+    [data-theme="dark"] #receipt-content .border-indigo-100 {
+        border-color: rgb(55 48 163) !important; /* indigo-800 */
+    }
+    
+    [data-theme="dark"] #receipt-content .text-indigo-900 {
+        color: rgb(238 242 255) !important; /* indigo-50 */
+    }
+    
+    [data-theme="dark"] #receipt-content .text-indigo-600 {
+        color: rgb(165 180 252) !important; /* indigo-300 */
+    }
+    
+    [data-theme="dark"] #receipt-content .text-indigo-800 {
+        color: rgb(199 210 254) !important; /* indigo-200 */
+    }
+    
     @media print {
         body * {
             visibility: hidden;

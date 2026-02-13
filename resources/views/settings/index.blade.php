@@ -58,7 +58,7 @@
                         </select>
                         @elseif(in_array($setting->key, ['theme_primary_color', 'theme_secondary_color']))
                         <div x-data="{
-                            rgb: '{{ $setting->value ?? ($setting->key == 'theme_primary_color' ? '255 222 173' : '255 213 153') }}',
+                            rgb: '{{ $setting->value ?? ($setting->key == 'theme_primary_color' ? '255 245 230' : '255 240 217') }}',
                             hex: '',
                             init() {
                                 this.updateHexFromRgb();
@@ -69,7 +69,7 @@
                                     const [r, g, b] = parts.map(Number);
                                     this.hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
                                 } else {
-                                    this.hex = '{{ $setting->key == 'theme_primary_color' ? '#ffdead' : '#ffd599' }}'; // Fallback
+                                    this.hex = '{{ $setting->key == 'theme_primary_color' ? '#fff5e6' : '#fff0d9' }}'; // Fallback
                                 }
                             },
                             updateFromHex(e) {
@@ -94,15 +94,26 @@
                                 <div class="flex-1">
                                     <input type="text" name="{{ $setting->key }}" x-model="rgb" class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-slate-50 font-mono text-slate-600" readonly>
                                 </div>
+                                <button type="button" 
+                                    @click="updateFromPreset('{{ $setting->key == 'theme_primary_color' ? '#fff5e6' : '#fff0d9' }}')"
+                                    class="inline-flex items-center px-4 py-2.5 border border-slate-300 rounded-lg shadow-sm text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 whitespace-nowrap"
+                                    title="Reset to default {{ $setting->key == 'theme_primary_color' ? 'primary' : 'secondary' }} color">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Reset
+                                </button>
                             </div>
                             
                             <!-- Color Presets -->
                             <div class="flex gap-2">
                                 @if($setting->key == 'theme_primary_color')
+                                    <button type="button" @click="updateFromPreset('#fff5e6')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #fff5e6;" title="Light Cream (Default)"></button>
                                     <button type="button" @click="updateFromPreset('#ffdead')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #ffdead;" title="Navajo White"></button>
                                     <button type="button" @click="updateFromPreset('#e2e8f5')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #e2e8f5;" title="Soft Blue"></button>
                                     <button type="button" @click="updateFromPreset('#ecfdf5')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #ecfdf5;" title="Green Mint"></button>
                                 @else
+                                    <button type="button" @click="updateFromPreset('#fff0d9')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #fff0d9;" title="Light Peach (Default)"></button>
                                     <button type="button" @click="updateFromPreset('#ffd599')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #ffd599;" title="Warm Tone"></button>
                                     <button type="button" @click="updateFromPreset('#ffffff')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #ffffff;" title="White"></button>
                                     <button type="button" @click="updateFromPreset('#f8fafc')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #f8fafc;" title="Soft Gray"></button>

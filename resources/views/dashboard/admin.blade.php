@@ -225,12 +225,83 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    /* Dark Mode Overrides for Dashboard - Ultra Specific */
+    
+    /* Force ALL text in stat cards to be visible */
+    [data-theme="dark"] .bg-slate-50 p.text-2xl.font-bold.text-slate-900,
+    [data-theme="dark"] .bg-slate-50 p.text-2xl,
+    [data-theme="dark"] .bg-slate-50 .text-2xl,
+    [data-theme="dark"] .bg-slate-50 p,
+    [data-theme="dark"] .bg-slate-50 h1,
+    [data-theme="dark"] .bg-slate-50 h2,
+    [data-theme="dark"] .bg-slate-50 h3,
+    [data-theme="dark"] .bg-slate-50 span {
+        color: rgb(248 250 252) !important; /* Force bright text */
+    }
+    
+    /* Specifically target slate-500 and slate-400 text in cards */
+    [data-theme="dark"] .bg-slate-50 .text-slate-500,
+    [data-theme="dark"] .bg-slate-50 .text-slate-400 {
+        color: rgb(148 163 184) !important; /* slate-400 */
+    }
+    
+    /* Global text color overrides */
+    [data-theme="dark"] .text-slate-900,
+    [data-theme="dark"] h1.text-slate-900,
+    [data-theme="dark"] h2.text-slate-900,
+    [data-theme="dark"] h3.text-slate-900,
+    [data-theme="dark"] p.text-slate-900,
+    [data-theme="dark"] span.text-slate-900,
+    [data-theme="dark"] div.text-slate-900 {
+        color: rgb(248 250 252) !important; /* slate-50 */
+    }
+    
+    [data-theme="dark"] .text-slate-800,
+    [data-theme="dark"] p.text-slate-800,
+    [data-theme="dark"] span.text-slate-800 {
+        color: rgb(226 232 240) !important; /* slate-200 */
+    }
+    
+    [data-theme="dark"] .text-slate-700,
+    [data-theme="dark"] span.text-slate-700 {
+        color: rgb(203 213 225) !important; /* slate-300 */
+    }
+    
+    [data-theme="dark"] .text-slate-600,
+    [data-theme="dark"] .text-slate-500,
+    [data-theme="dark"] .text-slate-400,
+    [data-theme="dark"] .text-slate-300 {
+        color: rgb(148 163 184) !important; /* slate-400 */
+    }
+    
+    [data-theme="dark"] .bg-slate-100 {
+        background-color: rgb(51 65 85) !important; /* slate-700 */
+    }
+    
+    [data-theme="dark"] .bg-slate-200 {
+        background-color: rgb(71 85 105) !important; /* slate-600 */
+    }
+    
+    /* Chart specific dark mode fixes */
+    [data-theme="dark"] #revenueChart {
+        filter: brightness(1.2);
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Revenue Chart
 const revenueCtx = document.getElementById('revenueChart').getContext('2d');
 const revenueData = @json($monthlyRevenue);
+
+// Detect dark mode
+const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+const gridColor = isDarkMode ? '#334155' : '#f3f4f6'; // slate-700 : gray-100
+const tickColor = isDarkMode ? '#94a3b8' : '#9ca3af'; // slate-400 : gray-400
 
 new Chart(revenueCtx, {
     type: 'line',
@@ -243,7 +314,7 @@ new Chart(revenueCtx, {
             backgroundColor: 'rgba(79, 70, 229, 0.05)',
             borderWidth: 3,
             fill: true,
-            pointBackgroundColor: '#ffffff',
+            pointBackgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
             pointBorderColor: '#4f46e5',
             pointBorderWidth: 2,
             pointRadius: 4,
@@ -281,14 +352,14 @@ new Chart(revenueCtx, {
                 beginAtZero: true,
                 grid: {
                     borderDash: [2, 4],
-                    color: '#f3f4f6',
+                    color: gridColor,
                     drawBorder: false
                 },
                 ticks: {
                     font: {
                         size: 11
                     },
-                    color: '#9ca3af',
+                    color: tickColor,
                     callback: function(value) {
                         return '৳' + (value/1000) + 'k';
                     }
@@ -302,7 +373,7 @@ new Chart(revenueCtx, {
                     font: {
                         size: 11
                     },
-                    color: '#9ca3af'
+                    color: tickColor
                 }
             }
         },

@@ -105,6 +105,33 @@
 }
 
 /* ============================================
+   TEXT CONTRAST FIXES - LIGHT MODE
+   Force dark text on light backgrounds for readability
+   ============================================ */
+:root .text-slate-400,
+:root .text-slate-300,
+:root .text-gray-400,
+:root .text-gray-300 {
+    color: rgb(71 85 105) !important; /* slate-600 - darker for contrast */
+}
+
+/* Ensure headings and labels are always dark in light mode */
+:root:not([data-theme="dark"]) th:not([class*="bg-slate-9"]):not([class*="bg-gray-9"]),
+:root:not([data-theme="dark"]) label:not([class*="text-white"]):not([class*="text-indigo"]),
+:root:not([data-theme="dark"]) .font-semibold:not([class*="text-white"]):not([class*="text-indigo"]),
+:root:not([data-theme="dark"]) .font-bold:not([class*="text-white"]):not([class*="text-indigo"]) {
+    color: rgb(15 23 42) !important; /* slate-900 */
+}
+
+/* Override any light text colors that would be invisible on light backgrounds */
+:root:not([data-theme="dark"]) .text-slate-200,
+:root:not([data-theme="dark"]) .text-gray-200,
+:root:not([data-theme="dark"]) .text-slate-100,
+:root:not([data-theme="dark"]) .text-gray-100 {
+    color: rgb(71 85 105) !important; /* slate-600 */
+}
+
+/* ============================================
    DARK MODE TEXT COLOR OVERRIDES
    ============================================ */
 [data-theme="dark"] .text-slate-900,
