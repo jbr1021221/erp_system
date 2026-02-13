@@ -28,7 +28,7 @@
         </div>
 
         <!-- Filters -->
-        <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-5 mb-8">
+        <div class="rounded-xl shadow-sm p-5 mb-8" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
             <form action="{{ route('payments.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="col-span-1 md:col-span-2">
                     <label for="search" class="sr-only">Search</label>
@@ -38,22 +38,22 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                        <input type="text" name="search" id="search" class="focus:ring-slate-500 focus:border-slate-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-2.5" placeholder="Search by receipt, student name or ID..." value="{{ request('search') }}">
+                        <input type="text" name="search" id="search" class="focus:ring-slate-500 focus:border-slate-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-2.5" placeholder="Search by receipt, student name or ID..." value="{{ request('search') }}" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <input type="date" name="start_date" class="block w-full pl-3 pr-2 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" value="{{ request('start_date') }}" placeholder="Start Date">
+                        <input type="date" name="start_date" class="block w-full pl-3 pr-2 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" value="{{ request('start_date') }}" placeholder="Start Date" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                     </div>
                     <div>
-                        <input type="date" name="end_date" class="block w-full pl-3 pr-2 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" value="{{ request('end_date') }}" placeholder="End Date">
+                        <input type="date" name="end_date" class="block w-full pl-3 pr-2 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" value="{{ request('end_date') }}" placeholder="End Date" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                     </div>
                 </div>
 
                 <div>
                     <label for="payment_method" class="sr-only">Method</label>
-                    <select name="payment_method" id="payment_method" class="block w-full pl-3 pr-10 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl">
+                    <select name="payment_method" id="payment_method" class="block w-full pl-3 pr-10 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                         <option value="">All Methods</option>
                         <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
                         <option value="bank_transfer" {{ request('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
@@ -64,7 +64,7 @@
                 </div>
 
                 <div class="md:col-span-4 flex justify-end">
-                    <a href="{{ route('payments.index') }}" class="mr-3 inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-xl text-slate-700 bg-slate-50 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                    <a href="{{ route('payments.index') }}" class="mr-3 inline-flex items-center px-4 py-2 shadow-sm text-sm font-medium rounded-xl transition-colors" style="border: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-secondary));" onmouseover="this.style.backgroundColor='rgb(var(--bg-secondary))';" onmouseout="this.style.backgroundColor='rgb(var(--bg-elevated));';">
                         Reset
                     </a>
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">

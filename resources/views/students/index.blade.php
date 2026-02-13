@@ -86,10 +86,10 @@
     </div>
 
     <!-- Toolbar: Search & Stats -->
-    <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between p-4 rounded-2xl shadow-sm" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
         <div class="relative w-full md:w-96">
             <input type="text" id="custom-search" placeholder="Search by name, ID or email..." 
-                class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 pl-11 text-sm font-medium text-slate-700 placeholder-slate-400 focus:bg-white focus:border-slate-900 focus:ring-0 transition-all">
+                class="block w-full rounded-xl px-4 py-3 pl-11 text-sm font-medium placeholder-slate-400 focus:ring-0 transition-all" style="background-color: rgb(var(--bg-secondary)); color: rgb(var(--text-primary)); border-color: rgb(var(--border-primary));">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -100,7 +100,7 @@
         <div class="flex items-center gap-4">
             <div class="hidden sm:flex items-center gap-2">
                 <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Display</span>
-                <select id="custom-length" class="rounded-lg border-slate-200 text-xs font-bold text-slate-600 focus:border-slate-900 focus:ring-0 py-1 pl-2 pr-8">
+                <select id="custom-length" class="rounded-lg text-xs font-bold focus:ring-0 py-1 pl-2 pr-8" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary)); border-color: rgb(var(--border-primary));">
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
@@ -118,22 +118,22 @@
     </div>
 
     <!-- Table Container -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="rounded-2xl shadow-sm overflow-hidden" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
         <div class="overflow-x-auto min-h-[400px]">
             <table id="students-table" class="min-w-full divide-y divide-slate-100 w-full">
                 <thead>
-                    <tr class="bg-slate-50">
-                        <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">SL</th>
-                        <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Student Name</th>
-                        <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Student ID</th>
-                        <th class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Classification</th>
-                        <th class="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Actions</th>
+                    <tr style="background-color: rgb(var(--bg-secondary));">
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">SL</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Student Name</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Student ID</th>
+                        <th class="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Classification</th>
+                        <th class="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody style="border-color: rgb(var(--border-primary));" class="divide-y">
                     @foreach($students as $index => $student)
-                    <tr class="hover:bg-slate-50/50 transition-colors group">
-                        <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-400">
+                    <tr class="transition-colors group" onmouseover="this.style.backgroundColor='rgb(var(--bg-secondary))';" onmouseout="this.style.backgroundColor='transparent';">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-bold" style="color: rgb(var(--text-tertiary));">
                             {{ $index + 1 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -148,13 +148,13 @@
                                     @endif
                                 </div>
                                 <div class="ml-4">
-                                    <a href="{{ route('students.show', $student) }}" class="text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors">
+                                    <a href="{{ route('students.show', $student) }}" class="text-sm font-bold transition-colors hover:text-indigo-600" style="color: rgb(var(--text-primary));">
                                         {{ $student->full_name }}
                                     </a>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-500 font-mono tracking-wider">
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-bold font-mono tracking-wider" style="color: rgb(var(--text-secondary));">
                             {{ $student->student_id }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -194,7 +194,7 @@
         </div>
         
         <!-- Premium Custom Footer -->
-        <div class="px-6 py-5 border-t border-slate-100 bg-slate-50 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-6" style="border-top: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-secondary));">
             <div id="custom-info" class="text-xs font-black text-slate-400 uppercase tracking-widest">
                 <!-- Info text will be injected here -->
             </div>

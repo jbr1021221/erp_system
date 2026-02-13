@@ -26,28 +26,58 @@
             return this.payableFees.find(f => f.id == this.tempFeeId);
         },
 
+        // Check if a specific period is already in the grouped cart items
         isPeriodInCart(feeId, periodValue) {
-            return this.cartItems.some(item => item.fee_structure_id === feeId && item.billing_month === periodValue);
+            const item = this.cartItems.find(i => i.fee_structure_id === feeId);
+            if (!item) return false;
+            return item.periods.some(p => p.billing_month == periodValue);
         },
 
         addToCart() {
             if (!this.tempFee || this.tempSelectedPeriodValues.length === 0) return;
             
-            this.tempSelectedPeriodValues.forEach(periodVal => {
-                if (this.isPeriodInCart(this.tempFee.id, periodVal)) return;
-                
-                // Find label for period
-                const periodObj = this.tempFee.available_periods.find(p => p.value == periodVal);
-                const label = periodObj ? periodObj.label : periodVal;
+            // Check if we already have this fee structure in cart
+            let existingItemIndex = this.cartItems.findIndex(i => i.fee_structure_id === this.tempFee.id);
+            let itemPeriods = existingItemIndex > -1 ? [...this.cartItems[existingItemIndex].periods] : [];
 
-                this.cartItems.push({
-                    fee_structure_id: this.tempFee.id,
-                    fee_type: this.tempFee.fee_type,
+            // Add new periods
+            this.tempSelectedPeriodValues.forEach(periodVal => {
+                // Avoid duplicates
+                if (itemPeriods.some(p => p.billing_month == periodVal)) return;
+
+                const periodObj = this.tempFee.available_periods.find(p => p.value == periodVal);
+                itemPeriods.push({
                     billing_month: periodVal,
-                    period_label: label,
-                    amount: this.tempFee.unit_amount
+                    period_label: periodObj ? periodObj.label : periodVal,
+                    amount: this.tempFee.unit_amount,
+                    raw_value: parseInt(periodVal) // Ensure integer for sorting
                 });
             });
+
+            // Sort periods by value (month index)
+            itemPeriods.sort((a, b) => a.raw_value - b.raw_value);
+
+            // Create display label using ranges
+            const displayLabel = this.formatPeriodsLabel(itemPeriods, this.tempFee.frequency);
+            
+            // Calculate total amount for this fee group
+            const totalAmount = itemPeriods.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+            const newItem = {
+                fee_structure_id: this.tempFee.id,
+                fee_type: this.tempFee.fee_type,
+                display_label: displayLabel,
+                periods: itemPeriods,
+                total_amount: totalAmount
+            };
+
+            if (existingItemIndex > -1) {
+                // Update existing item
+                this.cartItems[existingItemIndex] = newItem;
+            } else {
+                // Add new item
+                this.cartItems.push(newItem);
+            }
             
             // Reset selection
             this.tempSelectedPeriodValues = [];
@@ -56,22 +86,80 @@
             this.calculateTotal();
         },
 
+        formatPeriodsLabel(periods, frequency) {
+            if (periods.length === 0) return '';
+            
+            // If it's yearly or one-time (value -1), just showing distinct labels logic or simple return works
+            if (periods.some(p => p.billing_month == -1)) {
+                 return periods.map(p => p.period_label).join(', ');
+            }
+
+            // Extract values for range detection
+            const values = periods.map(p => parseInt(p.billing_month));
+            
+            // Special handling for monthly to map 1->January
+            const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            let ranges = [];
+            let start = values[0];
+            let prev = values[0];
+
+            for (let i = 1; i < values.length; i++) {
+                // Determine step based on frequency or just checking diff
+                // Monthly step = 1, Quarterly step = 3, Half Yearly step = 6
+                let step = 1; 
+                if (frequency === 'quarterly') step = 3;
+                if (frequency === 'half_yearly') step = 6;
+
+                if (values[i] === prev + step) {
+                    prev = values[i];
+                } else {
+                    ranges.push(this.formatRange(start, prev, frequency, monthNames, periods));
+                    start = values[i];
+                    prev = values[i];
+                }
+            }
+            ranges.push(this.formatRange(start, prev, frequency, monthNames, periods));
+            
+            return ranges.join(' / ');
+        },
+
+        formatRange(start, end, frequency, monthNames, periods) {
+            const getLabel = (val) => {
+                const p = periods.find(per => per.billing_month == val);
+                if (!p) return '';
+                if (frequency === 'monthly') return monthNames[val] || p.period_label;
+                return p.period_label.split(' ')[0]; // Try to take 'Q1' from 'Q1 (Jan-Mar)'
+            };
+
+            if (start === end) {
+                return getLabel(start);
+            } else {
+                return getLabel(start) + '-' + getLabel(end);
+            }
+        },
+
         removeFromCart(index) {
             this.cartItems.splice(index, 1);
             this.calculateTotal();
         },
 
         calculateTotal() {
-            this.amount = this.cartItems.reduce((sum, item) => sum + parseFloat(item.amount), 0).toFixed(2);
+            this.amount = this.cartItems.reduce((sum, item) => sum + parseFloat(item.total_amount), 0).toFixed(2);
         },
         
         generateHiddenInputs() {
             let html = '';
-            this.cartItems.forEach((item, index) => {
-                html += `<input type='hidden' name='items[${index}][fee_structure_id]' value='${item.fee_structure_id}'>`;
-                html += `<input type='hidden' name='items[${index}][fee_type]' value='${item.fee_type}'>`;
-                html += `<input type='hidden' name='items[${index}][billing_month]' value='${item.billing_month}'>`;
-                html += `<input type='hidden' name='items[${index}][amount]' value='${item.amount}'>`;
+            let globalIndex = 0;
+            
+            this.cartItems.forEach((group) => {
+                group.periods.forEach((period) => {
+                    html += `<input type='hidden' name='items[${globalIndex}][fee_structure_id]' value='${group.fee_structure_id}'>`;
+                    html += `<input type='hidden' name='items[${globalIndex}][fee_type]' value='${group.fee_type}'>`;
+                    html += `<input type='hidden' name='items[${globalIndex}][billing_month]' value='${period.billing_month}'>`;
+                    html += `<input type='hidden' name='items[${globalIndex}][amount]' value='${period.amount}'>`;
+                    globalIndex++;
+                });
             });
             return html;
         },
@@ -87,8 +175,10 @@
             <div class="bg-indigo-50/50 p-6 rounded-xl border border-indigo-100">
                 <label for="student_id" class="block text-sm font-bold text-indigo-900 mb-2">Select Student</label>
                 <select name="student_id" id="student_id" required 
-                    class="block w-full rounded-xl border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-white"
-                    @change="window.location.href = '{{ route('payments.create') }}?student_id=' + $event.target.value">
+                    class="block w-full rounded-xl border-indigo-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));"
+                    @change="window.location.href = '{{ route('payments.create') }}?student_id=' + $event.target.value"
+                    {{ request()->has('student_id') ? 'disabled' : '' }}>
                     <option value="">Search or Select Student...</option>
                     @foreach($students as $s)
                     <option value="{{ $s->id }}" {{ ($student && $student->id == $s->id) ? 'selected' : '' }}>
@@ -96,6 +186,9 @@
                     </option>
                     @endforeach
                 </select>
+                @if(request()->has('student_id') && $student)
+                    <input type="hidden" name="student_id" value="{{ $student->id }}">
+                @endif
             </div>
 
             @if($student)
@@ -114,7 +207,8 @@
                         <div class="space-y-3 mb-6">
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Fee Category</label>
                             <select x-model="tempFeeId" @change="tempSelectedPeriodValues = []" 
-                                class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3">
+                                class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                                style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                                 <option value="">Select Category...</option>
                                 <template x-for="fee in payableFees" :key="fee.id">
                                     <option :value="fee.id" x-text="fee.fee_type + ' (' + fee.frequency + ')'"></option>
@@ -192,9 +286,9 @@
                                         <tr class="hover:bg-slate-50 transition-colors group">
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800" x-text="item.fee_type"></td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100" x-text="item.period_label"></span>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100" x-text="item.display_label"></span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 text-right font-bold" x-text="formatAmount(item.amount)"></td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 text-right font-bold" x-text="formatAmount(item.total_amount)"></td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                                 <button type="button" @click="removeFromCart(index)" class="text-slate-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -239,14 +333,16 @@
                     <div class="space-y-2">
                         <label for="payment_date" class="block text-sm font-semibold text-slate-700">Date Collected</label>
                         <input type="date" name="payment_date" id="payment_date" required value="{{ date('Y-m-d') }}"
-                            class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-slate-50">
+                            class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                            style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                     </div>
 
                     <!-- Payment Method -->
                     <div class="space-y-2">
                         <label for="payment_method" class="block text-sm font-semibold text-slate-700">Payment Method</label>
                         <select name="payment_method" id="payment_method" required 
-                            class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-slate-50">
+                            class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                            style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                             <option value="cash">Cash</option>
                             <option value="bank_transfer">Bank Transfer</option>
                             <option value="online">Online</option>
@@ -260,7 +356,8 @@
                         <label for="transaction_reference" class="block text-sm font-semibold text-slate-700">Reference / Check No.</label>
                         <input type="text" name="transaction_reference" id="transaction_reference" 
                             placeholder="Optional"
-                            class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-slate-50">
+                            class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                            style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                     </div>
                 </div>
                 
@@ -268,7 +365,8 @@
                     <label for="remarks" class="block text-sm font-semibold text-slate-700">Remarks</label>
                     <textarea name="remarks" id="remarks" rows="2" 
                         placeholder="Any additional notes..."
-                        class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-slate-50"></textarea>
+                        class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3"
+                        style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));"></textarea>
                 </div>
             </div>
 

@@ -144,6 +144,50 @@ class GeneralSetting extends Model
     }
 
     /**
+     * Get theme primary color
+     */
+    public static function getPrimaryColor()
+    {
+        return self::getValue('theme_primary_color', '255 222 173'); // Default to Navajo White
+    }
+
+    /**
+     * Get theme secondary color
+     */
+    public static function getSecondaryColor()
+    {
+        // Default to a complementary warm tone if primary is Navajo White, otherwise fallback
+        return self::getValue('theme_secondary_color', '255 213 153'); 
+    }
+
+    /**
+     * Get CSS variable for primary and secondary theme colors
+     */
+    public static function getPrimaryColorCssVariable()
+    {
+        $primary = self::getPrimaryColor();
+        $secondary = self::getSecondaryColor();
+        
+        return "--bg-primary: {$primary}; --bg-secondary: {$secondary}; --bg-elevated: {$secondary}; --bg-tertiary: {$secondary};";
+    }
+
+    /**
+     * Set primary theme color
+     */
+    public static function setPrimaryColor($color)
+    {
+        return self::setValue('theme_primary_color', $color, 'Theme Primary Color', 'appearance');
+    }
+
+    /**
+     * Set secondary theme color
+     */
+    public static function setSecondaryColor($color)
+    {
+        return self::setValue('theme_secondary_color', $color, 'Theme Secondary Color', 'appearance');
+    }
+
+    /**
      * Clear all settings cache
      */
     public static function clearCache()

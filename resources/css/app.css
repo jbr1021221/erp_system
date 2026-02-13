@@ -11,9 +11,9 @@
        THEME VARIABLES - Light Mode (Default)
        ============================================ */
     :root {
-        /* Background Colors - Subtle Blue Tint */
-        --bg-primary: 226 232 245;        /* Darker blue-gray */
-        --bg-secondary: 218 225 240;      /* Medium blue-gray */
+        /* Background Colors - Navajo White Theme */
+        --bg-primary: 255 222 173;        /* Navajo White */
+        --bg-secondary: 255 213 153;      /* Slightly darker warm tone */
         --bg-tertiary: 255 255 255;       /* white */
         --bg-elevated: 255 255 255;       /* white */
         --bg-sidebar: 15 23 42;           /* slate-900 */
@@ -58,7 +58,7 @@
     /* ============================================
        THEME VARIABLES - Dark Mode
        ============================================ */
-    [data-theme="dark"] {
+    html[data-theme="dark"] {
         /* Background Colors */
         --bg-primary: 15 23 42;           /* slate-900 */
         --bg-secondary: 30 41 59;         /* slate-800 */
@@ -135,8 +135,46 @@
     background-color: rgb(51 65 85) !important; /* slate-700 */
 }
 
+/* ============================================
+   THEME BACKGROUND OVERRIDES
+   ============================================ */
+.bg-white {
+    background-color: rgb(var(--bg-secondary)) !important;
+}
+
+.bg-slate-50 {
+    background-color: rgb(var(--bg-primary)) !important; /* Use lighter primary for contrast/headers */
+}
+
+/* Ensure inputs remain readable and distinct */
+input.bg-white, select.bg-white, textarea.bg-white,
+input[type="text"], input[type="email"], input[type="password"], select, textarea {
+    background-color: #ffffff !important;
+}
+
+/* ============================================
+   THEME BACKGROUND OVERRIDES
+   ============================================ */
+.bg-white {
+    background-color: rgb(var(--bg-secondary)) !important;
+}
+
+.bg-slate-50 {
+    background-color: rgb(var(--bg-primary)) !important; /* Use lighter primary for contrast/headers */
+}
+
+/* Ensure inputs remain readable and distinct */
+input.bg-white, select.bg-white, textarea.bg-white,
+input[type="text"], input[type="email"], input[type="password"], select, textarea {
+    background-color: #ffffff !important;
+}
+
 [data-theme="dark"] .bg-white {
     background-color: rgb(30 41 59) !important; /* slate-800 */
+}
+
+[data-theme="dark"] .bg-slate-50 {
+    background-color: rgb(15 23 42) !important; /* slate-900 */
 }
 
 /* ============================================

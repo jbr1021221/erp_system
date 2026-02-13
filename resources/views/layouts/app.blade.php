@@ -33,6 +33,7 @@
         <style>
             :root {
                 {!! $fontSizeCss ?? '' !!}
+                {!! $primaryColorCss ?? '' !!}
             }
         </style>
         

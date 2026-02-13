@@ -56,6 +56,65 @@
                             <option value="text" {{ $setting->value == 'text' ? 'selected' : '' }}>Plain Text Style</option>
                             <option value="list" {{ $setting->value == 'list' ? 'selected' : '' }}>Bullet List Style</option>
                         </select>
+                        @elseif(in_array($setting->key, ['theme_primary_color', 'theme_secondary_color']))
+                        <div x-data="{
+                            rgb: '{{ $setting->value ?? ($setting->key == 'theme_primary_color' ? '255 222 173' : '255 213 153') }}',
+                            hex: '',
+                            init() {
+                                this.updateHexFromRgb();
+                            },
+                            updateHexFromRgb() {
+                                const parts = this.rgb.split(' ');
+                                if (parts.length === 3) {
+                                    const [r, g, b] = parts.map(Number);
+                                    this.hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+                                } else {
+                                    this.hex = '{{ $setting->key == 'theme_primary_color' ? '#ffdead' : '#ffd599' }}'; // Fallback
+                                }
+                            },
+                            updateFromHex(e) {
+                                this.hex = e.target.value;
+                                const r = parseInt(this.hex.slice(1, 3), 16);
+                                const g = parseInt(this.hex.slice(3, 5), 16);
+                                const b = parseInt(this.hex.slice(5, 7), 16);
+                                this.rgb = `${r} ${g} ${b}`;
+                            },
+                            updateFromPreset(hex) {
+                                this.hex = hex;
+                                const r = parseInt(this.hex.slice(1, 3), 16);
+                                const g = parseInt(this.hex.slice(3, 5), 16);
+                                const b = parseInt(this.hex.slice(5, 7), 16);
+                                this.rgb = `${r} ${g} ${b}`;
+                            }
+                        }">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="relative shrink-0">
+                                    <input type="color" x-model="hex" @input="updateFromHex" class="h-12 w-16 rounded-lg cursor-pointer border border-slate-300 p-1 bg-white shadow-sm transition-transform hover:scale-105">
+                                </div>
+                                <div class="flex-1">
+                                    <input type="text" name="{{ $setting->key }}" x-model="rgb" class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-slate-50 font-mono text-slate-600" readonly>
+                                </div>
+                            </div>
+                            
+                            <!-- Color Presets -->
+                            <div class="flex gap-2">
+                                @if($setting->key == 'theme_primary_color')
+                                    <button type="button" @click="updateFromPreset('#ffdead')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #ffdead;" title="Navajo White"></button>
+                                    <button type="button" @click="updateFromPreset('#e2e8f5')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #e2e8f5;" title="Soft Blue"></button>
+                                    <button type="button" @click="updateFromPreset('#ecfdf5')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #ecfdf5;" title="Green Mint"></button>
+                                @else
+                                    <button type="button" @click="updateFromPreset('#ffd599')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #ffd599;" title="Warm Tone"></button>
+                                    <button type="button" @click="updateFromPreset('#ffffff')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #ffffff;" title="White"></button>
+                                    <button type="button" @click="updateFromPreset('#f8fafc')" class="w-8 h-8 rounded-full border border-slate-300 shadow-sm transition-transform hover:scale-110 focus:outline-none ring-2 ring-transparent focus:ring-indigo-500" style="background-color: #f8fafc;" title="Soft Gray"></button>
+                                @endif
+                                <span class="text-xs text-slate-400 self-center ml-1">Presets</span>
+                            </div>
+
+                            <p class="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                                <svg class="w-3 h-3 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd"/></svg>
+                                Pick a color or select a preset.
+                            </p>
+                        </div>
                         @else
                         <input type="text" name="{{ $setting->key }}" id="{{ $setting->key }}" value="{{ $setting->value }}" class="block w-full rounded-xl border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm p-3 bg-slate-50">
                         @endif

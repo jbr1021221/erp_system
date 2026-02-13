@@ -30,19 +30,19 @@
         <!-- Role Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($roles as $role)
-            <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
+            <div class="rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
                 <div class="p-6">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-900">{{ $role->name }}</h3>
-                            <p class="text-xs text-slate-500 mt-1">
+                            <h3 class="text-lg font-bold" style="color: rgb(var(--text-primary));">{{ $role->name }}</h3>
+                            <p class="text-xs mt-1" style="color: rgb(var(--text-secondary));">
                                 {{ $role->permissions->count() }} active permissions
                             </p>
                         </div>
                         <div class="flex space-x-2">
                              @can('role-edit')
                                 @if($role->name != 'Super Admin')
-                                <a href="{{ route('roles.edit', $role->id) }}" class="text-slate-400 hover:text-slate-900 transition-colors">
+                                <a href="{{ route('roles.edit', $role->id) }}" class="transition-colors" style="color: rgb(var(--text-tertiary));" onmouseover="this.style.color='rgb(var(--text-primary))';" onmouseout="this.style.color='rgb(var(--text-tertiary));';">
                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
@@ -55,7 +55,7 @@
                                 <form action="{{ route('roles.destroy', $role->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this role?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-slate-400 hover:text-red-600 transition-colors">
+                                    <button type="submit" class="transition-colors" style="color: rgb(var(--text-tertiary));" onmouseover="this.style.color='rgb(var(--error))';" onmouseout="this.style.color='rgb(var(--text-tertiary));';">
                                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
@@ -67,21 +67,21 @@
                     </div>
                 </div>
                 
-                <div class="bg-slate-100 px-6 py-3 border-t border-slate-200">
+                <div class="px-6 py-3" style="background-color: rgb(var(--bg-secondary)); border-top: 1px solid rgb(var(--border-primary));">
                     <div class="flex flex-wrap gap-1">
                         @foreach($role->permissions->take(5) as $permission)
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-800">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" style="background-color: rgb(var(--bg-tertiary)); color: rgb(var(--text-secondary));">
                                 {{ $permission->name }}
                             </span>
                         @endforeach
                         @if($role->permissions->count() > 5)
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-200 text-slate-800">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" style="background-color: rgb(var(--bg-tertiary)); color: rgb(var(--text-secondary));">
                                 +{{ $role->permissions->count() - 5 }} more
                             </span>
                         @endif
                     </div>
                     <div class="mt-3">
-                         <a href="{{ route('roles.show', $role->id) }}" class="text-xs font-medium text-slate-800 hover:text-slate-900">View Full Details &rarr;</a>
+                         <a href="{{ route('roles.show', $role->id) }}" class="text-xs font-medium transition-colors" style="color: rgb(var(--text-secondary));" onmouseover="this.style.color='rgb(var(--text-primary))';" onmouseout="this.style.color='rgb(var(--text-secondary))';" >View Full Details &rarr;</a>
                     </div>
                 </div>
             </div>

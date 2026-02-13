@@ -28,7 +28,7 @@
         </div>
 
         <!-- Filters -->
-        <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-5 mb-8">
+        <div class="rounded-xl shadow-sm p-5 mb-8" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
             <form action="{{ route('users.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="col-span-1 md:col-span-2">
                     <label for="search" class="sr-only">Search</label>
@@ -38,13 +38,13 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                        <input type="text" name="search" id="search" class="focus:ring-slate-500 focus:border-slate-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-2.5" placeholder="Search by name or email..." value="{{ request('search') }}">
+                        <input type="text" name="search" id="search" class="focus:ring-slate-500 focus:border-slate-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-2.5" placeholder="Search by name or email..." value="{{ request('search') }}" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                     </div>
                 </div>
                 
                 <div>
                      <label for="role" class="sr-only">Role</label>
-                    <select name="role" id="role" class="block w-full pl-3 pr-10 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl">
+                    <select name="role" id="role" class="block w-full pl-3 pr-10 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                         <option value="">All Roles</option>
                         @foreach($roles as $role)
                             <option value="{{ $role }}" {{ request('role') == $role ? 'selected' : '' }}>{{ $role }}</option>
@@ -54,7 +54,7 @@
 
                 <div>
                     <label for="status" class="sr-only">Status</label>
-                    <select name="status" id="status" class="block w-full pl-3 pr-10 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl">
+                    <select name="status" id="status" class="block w-full pl-3 pr-10 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
                         <option value="">All Statuses</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                         <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
@@ -62,7 +62,7 @@
                 </div>
 
                 <div class="md:col-span-4 flex justify-end">
-                    <a href="{{ route('users.index') }}" class="mr-3 inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-xl text-slate-700 bg-slate-50 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                    <a href="{{ route('users.index') }}" class="mr-3 inline-flex items-center px-4 py-2 shadow-sm text-sm font-medium rounded-xl transition-colors" style="border: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-secondary));" onmouseover="this.style.backgroundColor='rgb(var(--bg-secondary))';" onmouseout="this.style.backgroundColor='rgb(var(--bg-elevated));';">
                         Reset
                     </a>
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">

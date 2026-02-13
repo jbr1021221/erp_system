@@ -85,7 +85,7 @@
 
     <!-- Stats Overview -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+        <div class="p-6 rounded-2xl shadow-sm flex items-center gap-4" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
             <div class="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -93,26 +93,26 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Teachers</p>
-                <p class="text-2xl font-black text-slate-900">{{ $teachers->count() }}</p>
+                <p class="text-2xl font-black" style="color: rgb(var(--text-primary));">{{ $teachers->count() }}</p>
             </div>
         </div>
         <!-- Add more stats as needed -->
     </div>
 
     <!-- Table Container -->
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+    <div class="rounded-3xl shadow-sm overflow-hidden" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
         <!-- Search & Filter Area -->
-        <div class="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4" style="border-bottom: 1px solid rgb(var(--border-primary));">
             <div class="relative flex-1 max-w-md">
                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </span>
-                <input type="text" id="custom-search" placeholder="Search by name, email or phone..." class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-slate-200 transition-all font-medium text-slate-600">
+                <input type="text" id="custom-search" placeholder="Search by name, email or phone..." class="w-full pl-11 pr-4 py-2.5 border-none rounded-xl text-sm focus:ring-2 focus:ring-slate-200 transition-all font-medium" style="background-color: rgb(var(--bg-secondary)); color: rgb(var(--text-primary));">
             </div>
             <div class="flex items-center gap-3">
-                <select id="custom-length" class="bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-slate-200 transition-all font-bold text-slate-600 px-4">
+                <select id="custom-length" class="border-none rounded-xl text-sm focus:ring-2 focus:ring-slate-200 transition-all font-bold px-4" style="background-color: rgb(var(--bg-secondary)); color: rgb(var(--text-primary));">
                     <option value="10">10 Rows</option>
                     <option value="25">25 Rows</option>
                     <option value="50">50 Rows</option>
@@ -123,18 +123,18 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse" id="teachers-table">
                 <thead>
-                    <tr class="bg-slate-50/50">
-                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Teacher</th>
-                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Contact</th>
-                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Designation</th>
-                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Joined Date</th>
-                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Status</th>
-                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Actions</th>
+                    <tr style="background-color: rgb(var(--bg-secondary));">
+                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Teacher</th>
+                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Contact</th>
+                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Designation</th>
+                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Joined Date</th>
+                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Status</th>
+                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest text-right" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody style="border-color: rgb(var(--border-primary));" class="divide-y">
                     @foreach($teachers as $teacher)
-                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                    <tr class="transition-colors group" onmouseover="this.style.backgroundColor='rgb(var(--bg-secondary))';" onmouseout="this.style.backgroundColor='transparent';">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
                                 @if($teacher->photo)
@@ -145,14 +145,14 @@
                                     </div>
                                 @endif
                                 <div>
-                                    <p class="text-sm font-bold text-slate-900">{{ $teacher->name }}</p>
-                                    <p class="text-xs text-slate-400 font-medium tracking-tight">ID: #{{ str_pad($teacher->id, 5, '0', STR_PAD_LEFT) }}</p>
+                                    <p class="text-sm font-bold" style="color: rgb(var(--text-primary));">{{ $teacher->name }}</p>
+                                    <p class="text-xs font-medium tracking-tight" style="color: rgb(var(--text-tertiary));">ID: #{{ str_pad($teacher->id, 5, '0', STR_PAD_LEFT) }}</p>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <p class="text-sm font-bold text-slate-700">{{ $teacher->phone }}</p>
-                            <p class="text-xs text-slate-400 font-medium">{{ $teacher->email }}</p>
+                            <p class="text-sm font-bold" style="color: rgb(var(--text-secondary));">{{ $teacher->phone }}</p>
+                            <p class="text-xs font-medium" style="color: rgb(var(--text-tertiary));">{{ $teacher->email }}</p>
                         </td>
                         <td class="px-6 py-4">
                             <span class="inline-flex px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[11px] font-black uppercase tracking-wider">
@@ -160,8 +160,8 @@
                             </span>
                         </td>
                         <td class="px-6 py-4">
-                            <p class="text-sm font-bold text-slate-700">{{ $teacher->join_date->format('M d, Y') }}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ $teacher->join_date->diffForHumans() }}</p>
+                            <p class="text-sm font-bold" style="color: rgb(var(--text-secondary));">{{ $teacher->join_date->format('M d, Y') }}</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest" style="color: rgb(var(--text-tertiary));">{{ $teacher->join_date->diffForHumans() }}</p>
                         </td>
                         <td class="px-6 py-4">
                             @if($teacher->is_active)
@@ -212,7 +212,7 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-5 border-t border-slate-100 bg-slate-50 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-6" style="border-top: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-secondary));">
             <div id="custom-info" class="text-xs font-black text-slate-400 uppercase tracking-widest">
                 <!-- Info text injected via JS -->
             </div>

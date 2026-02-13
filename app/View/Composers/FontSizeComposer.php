@@ -19,6 +19,7 @@ class FontSizeComposer
             'fontSizeValues' => $fontSizeValues,
             'currentFontSize' => $currentFontSize,
             'fontSizeCss' => GeneralSetting::getFontSizeCssVariables(),
+            'primaryColorCss' => GeneralSetting::getPrimaryColorCssVariable(),
         ]);
     }
 }
