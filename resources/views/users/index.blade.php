@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page-title', 'Users')
+
 @section('title', 'Users - ERP System')
 
 @section('subnav')
@@ -22,7 +24,7 @@
     </div>
             @can('user-create')
             <div class="mt-4 flex md:mt-0 md:ml-4">
-                <a href="{{ route('users.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
+                <a href="{{ route('users.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
                     <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
@@ -70,7 +72,7 @@
                     <a href="{{ route('users.index') }}" class="mr-3 inline-flex items-center px-4 py-2 shadow-sm text-sm font-medium rounded-xl transition-colors" style="border: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-secondary));" onmouseover="this.style.backgroundColor='rgb(var(--bg-secondary))';" onmouseout="this.style.backgroundColor='rgb(var(--bg-elevated));';">
                         Reset
                     </a>
-                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
                         Apply Filters
                     </button>
                 </div>

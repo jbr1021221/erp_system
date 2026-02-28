@@ -15,7 +15,7 @@
 <div class="max-w-5xl mx-auto space-y-6">
     <!-- Profile Header -->
     <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
-        <div class="h-32 bg-slate-900 border-b border-slate-800 relative overflow-hidden">
+        <div class="h-32 bg-emerald-600 border-b border-slate-800 relative overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-r from-slate-900 to-indigo-900 opacity-50"></div>
             <div class="absolute -right-10 -top-10 h-64 w-64 bg-white/5 rounded-full blur-3xl"></div>
         </div>
@@ -42,7 +42,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         @can('teacher-edit')
-                        <a href="{{ route('teachers.edit', $teacher) }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                        <a href="{{ route('teachers.edit', $teacher) }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
                             Edit Profile
                         </a>
                         @endcan
@@ -115,7 +115,7 @@
             <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-8">
                 <div class="flex items-center justify-between border-b border-slate-50 pb-6">
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
-                        <span class="h-2 w-2 rounded-full bg-slate-900"></span>
+                        <span class="h-2 w-2 rounded-full bg-emerald-600"></span>
                         Professional Profile
                     </h3>
                 </div>

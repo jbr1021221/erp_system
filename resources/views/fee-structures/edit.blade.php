@@ -77,7 +77,7 @@
                 <a href="{{ route('fee-structures.index') }}" class="inline-flex items-center px-4 py-2 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors">
                     Cancel
                 </a>
-                <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all duration-200">
+                <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all duration-200">
                     Update Fee Structure
                 </button>
             </div>

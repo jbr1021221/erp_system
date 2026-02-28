@@ -520,9 +520,11 @@
         <tbody>
           @forelse($recentAdmissions as $student)
           @php
-            $sname    = $student->full_name ?? $student->name ?? '?';
-            $initials = collect(explode(' ', $sname))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
-            $gi       = (ord($sname[0] ?? 'A') - 65) % 8;
+            $sname    = trim($student->full_name ?? $student->name ?? '');
+            $sname    = $sname !== '' ? $sname : '?';
+            $initials = collect(explode(' ', $sname))->filter(fn($w) => strlen($w) > 0)->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
+            $initials = $initials !== '' ? $initials : '?';
+            $gi       = abs((ord(strlen($sname) > 0 ? $sname[0] : 'A') ?: ord('A')) - 65) % 8;
             $grads    = [['#059669','#34d399'],['#0d9488','#2dd4bf'],['#2563eb','#60a5fa'],['#7c3aed','#a78bfa'],['#db2777','#f472b6'],['#d97706','#fbbf24'],['#059669','#0d9488'],['#0284c7','#38bdf8']];
             $g        = $grads[$gi];
             $st       = $student->status ?? 'active';
@@ -580,9 +582,11 @@
         <tbody>
           @forelse($recentPayments as $payment)
           @php
-            $pname  = $payment->student->full_name ?? $payment->student->name ?? 'Unknown';
-            $pi     = collect(explode(' ', $pname))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
-            $pgi    = (ord($pname[0] ?? 'A') - 65) % 8;
+            $pname  = trim($payment->student->full_name ?? $payment->student->name ?? '');
+            $pname  = $pname !== '' ? $pname : 'Unknown';
+            $pi     = collect(explode(' ', $pname))->filter(fn($w) => strlen($w) > 0)->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
+            $pi     = $pi !== '' ? $pi : '?';
+            $pgi    = abs((ord(strlen($pname) > 0 ? $pname[0] : 'A') ?: ord('A')) - 65) % 8;
             $pg     = $grads[$pgi] ?? ['#059669','#34d399'];
             $status = $payment->status ?? 'paid';
             $sColor = match(true) {

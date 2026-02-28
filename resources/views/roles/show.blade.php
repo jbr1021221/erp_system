@@ -28,7 +28,7 @@
                     Back to List
                 </a>
                 @can('role-edit')
-                <a href="{{ route('roles.edit', $role->id) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                <a href="{{ route('roles.edit', $role->id) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
                     Edit Role
                 </a>
                 @endcan

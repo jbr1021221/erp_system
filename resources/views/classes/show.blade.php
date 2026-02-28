@@ -25,7 +25,7 @@
                     Back to List
                 </a>
                 @can('class-edit')
-                <a href="{{ route('classes.edit', $class) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                <a href="{{ route('classes.edit', $class) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
                     Edit Class
                 </a>
                 @endcan
@@ -40,7 +40,7 @@
                     <div class="px-6 py-4 flex justify-between items-center" style="border-bottom: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-secondary));">  
                         <h3 class="text-lg font-bold" style="color: rgb(var(--text-primary));">Fee Structure</h3>
                         @can('fee-structure-create')
-                        <a href="{{ route('fee-structures.create', ['class_id' => $class->id]) }}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-white bg-slate-900 hover:bg-slate-800 transition-colors">
+                        <a href="{{ route('fee-structures.create', ['class_id' => $class->id]) }}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-bold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 transition-colors">
                             + Add Fee
                         </a>
                         @endcan
@@ -167,7 +167,7 @@
                                 <label for="section_name" class="sr-only">Section Name</label>
                                 <input type="text" name="name" id="section_name" placeholder="e.g. Section A" required class="block w-full rounded-md shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary)); border-color: rgb(var(--border-primary));">
                             </div>
-                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
                                 Add
                             </button>
                         </form>

@@ -23,7 +23,7 @@
                 Back to List
             </a>
             @can('student-edit')
-            <a href="{{ route('students.edit', $student) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 transition-all">
+            <a href="{{ route('students.edit', $student) }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-slate-800 transition-all">
                 Edit Profile
             </a>
             @endcan
@@ -87,7 +87,7 @@
                     <!-- Action Button -->
                     <div class="flex-shrink-0 ml-auto">
                          @can('payment-create')
-                        <a href="{{ route('payments.create', ['student_id' => $student->id]) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20">
+                        <a href="{{ route('payments.create', ['student_id' => $student->id]) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white text-xs font-bold uppercase rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
