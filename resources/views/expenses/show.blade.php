@@ -8,15 +8,15 @@
         <!-- Header -->
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate">
+                <h2 class="text-xl font-semibold text-slate-800">
                     Expense Details
                 </h2>
                 <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
                     <div class="mt-2 flex items-center text-sm text-slate-500">
-                        <span class="font-medium text-slate-900 mr-1">Ref:</span> {{ $expense->reference_no }}
+                        <span class="font-medium text-slate-800 mr-1">Ref:</span> {{ $expense->reference_no }}
                     </div>
                      <div class="mt-2 flex items-center text-sm text-slate-500">
-                        <span class="font-medium text-slate-900 mr-1">Date:</span> {{ $expense->expense_date->format('M d, Y') }}
+                        <span class="font-medium text-slate-800 mr-1">Date:</span> {{ $expense->expense_date->format('M d, Y') }}
                     </div>
                 </div>
             </div>
@@ -38,9 +38,9 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Main Info -->
             <div class="lg:col-span-2 space-y-6">
-                <div class="bg-slate-50 shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+                <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                        <h3 class="text-lg font-medium leading-6 text-slate-900">Expense Information</h3>
+                        <h3 class="text-lg font-medium leading-6 text-slate-800">Expense Information</h3>
                          @php
                             $statusClasses = match($expense->status) {
                                 'approved' => 'bg-green-100 text-green-800',
@@ -57,7 +57,7 @@
                         <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
                             <div class="sm:col-span-2">
                                 <dt class="text-sm font-medium text-slate-500">Description</dt>
-                                <dd class="mt-1 text-sm text-slate-900">{{ $expense->title }}</dd>
+                                <dd class="mt-1 text-sm text-slate-800">{{ $expense->title }}</dd>
                                 @if($expense->description)
                                 <dd class="mt-2 text-sm text-slate-600 border-l-2 border-slate-200 pl-3 italic">
                                     "{{ $expense->description }}"
@@ -67,22 +67,22 @@
                             
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-slate-500">Category</dt>
-                                <dd class="mt-1 text-sm text-slate-900 font-semibold">{{ $expense->category->name }}</dd>
+                                <dd class="mt-1 text-sm text-slate-800 font-semibold">{{ $expense->category->name }}</dd>
                             </div>
                             
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-slate-500">Amount</dt>
-                                <dd class="mt-1 text-lg font-bold text-slate-900">৳{{ number_format($expense->amount, 2) }}</dd>
+                                <dd class="mt-1 text-lg font-bold text-slate-800">৳{{ number_format($expense->amount, 2) }}</dd>
                             </div>
 
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-slate-500">Payment Method</dt>
-                                <dd class="mt-1 text-sm text-slate-900 capitalize">{{ str_replace('_', ' ', $expense->payment_method) }}</dd>
+                                <dd class="mt-1 text-sm text-slate-800 capitalize">{{ str_replace('_', ' ', $expense->payment_method) }}</dd>
                             </div>
                             
                             <div class="sm:col-span-1">
                                 <dt class="text-sm font-medium text-slate-500">Vendor</dt>
-                                <dd class="mt-1 text-sm text-slate-900">{{ $expense->vendor->name ?? 'N/A' }}</dd>
+                                <dd class="mt-1 text-sm text-slate-800">{{ $expense->vendor->name ?? 'N/A' }}</dd>
                             </div>
 
                              @if($expense->status === 'approved')
@@ -105,8 +105,8 @@
                 <!-- Approval Action -->
                 @can('expense-approve')
                     @if($expense->status === 'pending')
-                    <div class="bg-slate-50 shadow-sm rounded-xl border border-slate-200 p-6">
-                        <h3 class="text-lg font-medium text-slate-900 mb-4">Approval Request</h3>
+                    <div class="bg-white rounded-lg border border-slate-200 p-6">
+                        <h3 class="text-lg font-medium text-slate-800 mb-4">Approval Request</h3>
                         <p class="text-sm text-slate-500 mb-6">Review this expense and take action.</p>
                         
                         <div class="flex space-x-3">
@@ -123,9 +123,9 @@
                 @endcan
 
                 <!-- Attachment -->
-                <div class="bg-slate-50 shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+                <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-slate-200">
-                        <h3 class="text-lg font-medium leading-6 text-slate-900">Attachment</h3>
+                        <h3 class="text-lg font-medium leading-6 text-slate-800">Attachment</h3>
                     </div>
                     <div class="p-6">
                         @if($expense->attachment)
@@ -134,9 +134,9 @@
                                     <svg class="h-8 w-8 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    <span class="ml-2 text-sm font-medium text-slate-900">Document</span>
+                                    <span class="ml-2 text-sm font-medium text-slate-800">Document</span>
                                 </div>
-                                <a href="{{ Storage::url($expense->attachment) }}" target="_blank" class="text-slate-800 hover:text-slate-900 font-medium text-sm">Download</a>
+                                <a href="{{ Storage::url($expense->attachment) }}" target="_blank" class="text-slate-800 hover:text-slate-800 font-medium text-sm">Download</a>
                             </div>
                         @else
                             <p class="text-sm text-slate-500 italic text-center">No attachment provided.</p>

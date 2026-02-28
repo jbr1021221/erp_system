@@ -1,299 +1,242 @@
 @extends('layouts.app')
-
-@section('title', 'Teachers - ERP System')
-
-@push('styles')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-<style>
-    .dataTables_wrapper .dataTables_length, 
-    .dataTables_wrapper .dataTables_filter, 
-    .dataTables_wrapper .dataTables_info, 
-    .dataTables_wrapper .dataTables_processing, 
-    .dataTables_wrapper .dataTables_paginate {
-        display: none !important;
-    }
-    
-    table.dataTable.no-footer {
-        border-bottom: none !important;
-    }
-
-    .custom-page-btn {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        height: 32px !important;
-        min-width: 32px !important;
-        padding: 0 10px !important;
-        margin: 0 4px !important;
-        border-radius: 8px !important;
-        border: 1px solid #e2e8f0 !important;
-        background-color: #ffffff !important;
-        color: #475569 !important;
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        text-decoration: none !important;
-    }
-
-    .custom-page-btn:hover {
-        background-color: #f8fafc !important;
-        border-color: #cbd5e1 !important;
-        color: #0f172a !important;
-    }
-
-    .custom-page-btn.active {
-        background-color: #0f172a !important;
-        border-color: #0f172a !important;
-        color: #ffffff !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-    }
-
-    .custom-page-btn.disabled {
-        opacity: 0.3 !important;
-        cursor: not-allowed !important;
-        pointer-events: none !important;
-    }
-</style>
-@endpush
-
-@section('header_title', 'Teachers Directory')
+@section('page-title', 'Teachers')
+@section('breadcrumb', 'Academics · All Teachers')
 
 @section('content')
-<div class="space-y-6">
-    <!-- Action Bar -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-            <div class="h-10 w-1 bg-slate-900 rounded-full"></div>
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900">All Teachers</h1>
-                <p class="text-sm text-slate-500 font-medium">Manage faculty and staff records</p>
-            </div>
-        </div>
-        
-        <div class="flex items-center gap-3">
-            @can('teacher-create')
-            <a href="{{ route('teachers.create') }}" class="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-all duration-300 shadow-lg shadow-slate-200 group">
-                <svg class="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                New Teacher
-            </a>
-            @endcan
-        </div>
-    </div>
 
-    <!-- Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="p-6 rounded-2xl shadow-sm flex items-center gap-4" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
-            <div class="h-12 w-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Teachers</p>
-                <p class="text-2xl font-black" style="color: rgb(var(--text-primary));">{{ $teachers->count() }}</p>
-            </div>
-        </div>
-        <!-- Add more stats as needed -->
-    </div>
-
-    <!-- Table Container -->
-    <div class="rounded-3xl shadow-sm overflow-hidden" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
-        <!-- Search & Filter Area -->
-        <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4" style="border-bottom: 1px solid rgb(var(--border-primary));">
-            <div class="relative flex-1 max-w-md">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </span>
-                <input type="text" id="custom-search" placeholder="Search by name, email or phone..." class="w-full pl-11 pr-4 py-2.5 border-none rounded-xl text-sm focus:ring-2 focus:ring-slate-200 transition-all font-medium" style="background-color: rgb(var(--bg-secondary)); color: rgb(var(--text-primary));">
-            </div>
-            <div class="flex items-center gap-3">
-                <select id="custom-length" class="border-none rounded-xl text-sm focus:ring-2 focus:ring-slate-200 transition-all font-bold px-4" style="background-color: rgb(var(--bg-secondary)); color: rgb(var(--text-primary));">
-                    <option value="10">10 Rows</option>
-                    <option value="25">25 Rows</option>
-                    <option value="50">50 Rows</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse" id="teachers-table">
-                <thead>
-                    <tr style="background-color: rgb(var(--bg-secondary));">
-                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Teacher</th>
-                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Contact</th>
-                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Designation</th>
-                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Joined Date</th>
-                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Status</th>
-                        <th class="px-6 py-4 text-xs font-black uppercase tracking-widest text-right" style="color: rgb(var(--text-tertiary)); border-bottom: 1px solid rgb(var(--border-primary));">Actions</th>
-                    </tr>
-                </thead>
-                <tbody style="border-color: rgb(var(--border-primary));" class="divide-y">
-                    @foreach($teachers as $teacher)
-                    <tr class="transition-colors group" onmouseover="this.style.backgroundColor='rgb(var(--bg-secondary))';" onmouseout="this.style.backgroundColor='transparent';">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-4">
-                                @if($teacher->photo)
-                                    <img src="{{ Storage::url($teacher->photo) }}" class="h-10 w-10 rounded-xl object-cover ring-2 ring-slate-100 group-hover:ring-slate-200 transition-all">
-                                @else
-                                    <div class="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-bold group-hover:bg-slate-200 transition-all">
-                                        {{ substr($teacher->name, 0, 1) }}
-                                    </div>
-                                @endif
-                                <div>
-                                    <p class="text-sm font-bold" style="color: rgb(var(--text-primary));">{{ $teacher->name }}</p>
-                                    <p class="text-xs font-medium tracking-tight" style="color: rgb(var(--text-tertiary));">ID: #{{ str_pad($teacher->id, 5, '0', STR_PAD_LEFT) }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <p class="text-sm font-bold" style="color: rgb(var(--text-secondary));">{{ $teacher->phone }}</p>
-                            <p class="text-xs font-medium" style="color: rgb(var(--text-tertiary));">{{ $teacher->email }}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[11px] font-black uppercase tracking-wider">
-                                {{ $teacher->designation }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <p class="text-sm font-bold" style="color: rgb(var(--text-secondary));">{{ $teacher->join_date->format('M d, Y') }}</p>
-                            <p class="text-[10px] font-bold uppercase tracking-widest" style="color: rgb(var(--text-tertiary));">{{ $teacher->join_date->diffForHumans() }}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            @if($teacher->is_active)
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                                    Active
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                                    Inactive
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                @can('teacher-view')
-                                <a href="{{ route('teachers.show', $teacher) }}" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all shadow-sm shadow-transparent hover:shadow-indigo-100">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                </a>
-                                @endcan
-                                @can('teacher-edit')
-                                <a href="{{ route('teachers.edit', $teacher) }}" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all shadow-sm shadow-transparent hover:shadow-amber-100">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                </a>
-                                @endcan
-                                @can('teacher-delete')
-                                <form action="{{ route('teachers.destroy', $teacher) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this teacher?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all shadow-sm shadow-transparent hover:shadow-red-100">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </form>
-                                @endcan
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Footer -->
-        <div class="px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-6" style="border-top: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-secondary));">
-            <div id="custom-info" class="text-xs font-black text-slate-400 uppercase tracking-widest">
-                <!-- Info text injected via JS -->
-            </div>
-            <div id="custom-pagination" class="flex items-center">
-                <!-- Pagination buttons injected via JS -->
-            </div>
-        </div>
-    </div>
+{{-- Page Header --}}
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--text-primary);letter-spacing:-0.5px;">All Teachers</h1>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:3px;">
+      Manage teaching staff ·
+      <span style="color:#4ade80;font-weight:600;">
+        {{ $teachers instanceof \Illuminate\Pagination\LengthAwarePaginator ? $teachers->total() : count($teachers ?? []) }} total
+      </span>
+    </p>
+  </div>
+  <a href="{{ route('teachers.create') }}"
+     style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:linear-gradient(135deg,#D4501E,#e8622d);border-radius:10px;font-size:13px;font-weight:600;color:white;text-decoration:none;transition:all 0.2s;box-shadow:0 4px 15px rgba(212,80,30,0.3);align-self:flex-start;"
+     onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(212,80,30,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(212,80,30,0.3)'">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Teacher
+  </a>
 </div>
-@endsection
 
-@push('scripts')
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+{{-- Filters --}}
+<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px;margin-bottom:16px;">
+  <form method="GET" action="{{ route('teachers.index') }}" class="flex flex-wrap gap-3 items-end">
+    <div class="flex-1 min-w-[200px]">
+      <label style="font-size:10px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Search</label>
+      <div class="relative">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, phone, subject..."
+          style="width:100%;height:40px;padding:0 12px 0 36px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:13px;background:rgba(255,255,255,0.05);color:var(--text-primary);outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='#D4501E'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+      </div>
+    </div>
+    <div class="min-w-[140px]">
+      <label style="font-size:10px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Department</label>
+      <select name="department" style="width:100%;height:40px;padding:0 12px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:13px;background:rgba(255,255,255,0.05);color:var(--text-primary);outline:none;cursor:pointer;">
+        <option value="">All Departments</option>
+        @foreach($departments ?? [] as $dept)
+          <option value="{{ $dept }}" {{ request('department') == $dept ? 'selected' : '' }}>{{ $dept }}</option>
+        @endforeach
+      </select>
+    </div>
+    <div class="min-w-[130px]">
+      <label style="font-size:10px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Status</label>
+      <select name="status" style="width:100%;height:40px;padding:0 12px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:13px;background:rgba(255,255,255,0.05);color:var(--text-primary);outline:none;cursor:pointer;">
+        <option value="">All Status</option>
+        <option value="active"   {{ request('status')=='active'   ? 'selected' : '' }}>Active</option>
+        <option value="inactive" {{ request('status')=='inactive' ? 'selected' : '' }}>Inactive</option>
+      </select>
+    </div>
+    <div class="flex gap-2">
+      <button type="submit" style="height:40px;padding:0 18px;background:linear-gradient(135deg,#D4501E,#e8622d);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Filter</button>
+      <a href="{{ route('teachers.index') }}" style="height:40px;padding:0 14px;display:inline-flex;align-items:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:13px;color:var(--text-muted);text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Clear</a>
+    </div>
+  </form>
+</div>
+
+{{-- Table --}}
+<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;">
+  <div class="overflow-x-auto">
+    <table class="w-full" style="border-collapse:collapse;">
+      <thead>
+        <tr style="background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.08);">
+          <th style="width:44px;padding:13px 16px;">
+            <input type="checkbox" id="selectAll" style="accent-color:#D4501E;width:15px;height:15px;cursor:pointer;">
+          </th>
+          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Teacher</th>
+          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Designation</th>
+          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Subject & Dept</th>
+          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Qualification</th>
+          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Classes</th>
+          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Status</th>
+          <th class="text-right" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($teachers ?? [] as $teacher)
+        @php
+          $displayName = $teacher->name ?? trim(($teacher->first_name ?? '') . ' ' . ($teacher->last_name ?? '')) ?: 'Unknown';
+          $initials = implode('', array_map(fn($p) => strtoupper($p[0]), array_slice(explode(' ', $displayName), 0, 2)));
+          $gi = (ord($displayName[0] ?? 'A') - 65) % 8;
+          $grads = [
+            ['#6366f1','#818cf8'],['#059669','#34d399'],['#0284c7','#38bdf8'],
+            ['#b45309','#fbbf24'],['#be123c','#fb7185'],['#7c3aed','#a78bfa'],
+            ['#0e7490','#22d3ee'],['#c2410c','#fb923c'],
+          ];
+          $g = $grads[$gi];
+
+          // Teacher model uses 'designation'; subject/department/qualification are optional columns
+          $designation   = $teacher->designation ?? '—';
+          $subject       = $teacher->subject       ?? null;
+          $department    = $teacher->department    ?? null;
+          $qualification = $teacher->qualification ?? null;
+
+          // Status: model uses 'is_active' boolean, but may also have 'status' string
+          $isActive = isset($teacher->status)
+              ? $teacher->status === 'active'
+              : (bool)($teacher->is_active ?? true);
+
+          $classCount = count($teacher->classes ?? []);
+        @endphp
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s;"
+            onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+          <td style="padding:14px 16px;">
+            <input type="checkbox" class="row-check" style="accent-color:#D4501E;width:15px;height:15px;cursor:pointer;">
+          </td>
+
+          {{-- Teacher name + phone --}}
+          <td style="padding:14px 16px;">
+            <div class="flex items-center gap-3">
+              <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,{{ $g[0] }},{{ $g[1] }});display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:white;flex-shrink:0;box-shadow:0 2px 8px {{ $g[0] }}40;">
+                {{ $initials }}
+              </div>
+              <div>
+                <a href="{{ route('teachers.show', $teacher) }}"
+                   style="font-size:14px;font-weight:600;color:var(--text-primary);text-decoration:none;transition:color 0.2s;"
+                   onmouseover="this.style.color='#e8622d'" onmouseout="this.style.color='var(--text-primary)'">
+                  {{ $displayName }}
+                </a>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">{{ $teacher->phone ?? 'N/A' }}</div>
+              </div>
+            </div>
+          </td>
+
+          {{-- Designation (what the DB actually has) --}}
+          <td style="padding:14px 16px;">
+            @if($designation !== '—')
+              <span style="display:inline-block;padding:3px 10px;background:rgba(212,80,30,0.12);border:1px solid rgba(212,80,30,0.25);border-radius:6px;font-size:12px;font-weight:600;color:#e8622d;">
+                {{ $designation }}
+              </span>
+            @else
+              <span style="color:var(--text-muted);font-size:13px;">—</span>
+            @endif
+          </td>
+
+          {{-- Subject & Dept (optional columns) --}}
+          <td style="padding:14px 16px;">
+            @if($subject || $department)
+              <div style="font-size:13px;font-weight:500;color:var(--text-secondary);">{{ $subject ?? '—' }}</div>
+              @if($department)
+                <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">{{ $department }}</div>
+              @endif
+            @else
+              {{-- Graceful: show designation here instead so column isn't blank --}}
+              <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Not set</span>
+            @endif
+          </td>
+
+          {{-- Qualification (optional column) --}}
+          <td style="padding:14px 16px;">
+            @if($qualification)
+              <div style="font-size:13px;color:var(--text-secondary);">{{ $qualification }}</div>
+            @else
+              <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Not set</span>
+            @endif
+          </td>
+
+          {{-- Assigned classes --}}
+          <td style="padding:14px 16px;">
+            <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);border-radius:6px;font-size:12px;font-weight:600;color:#94a3b8;">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              {{ $classCount }} {{ Str::plural('class', $classCount) }}
+            </span>
+          </td>
+
+          {{-- Status --}}
+          <td style="padding:14px 16px;">
+            @if($isActive)
+              <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);border-radius:6px;font-size:11px;font-weight:600;color:#4ade80;text-transform:uppercase;letter-spacing:0.5px;">
+                <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;"></span> Active
+              </span>
+            @else
+              <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:6px;font-size:11px;font-weight:600;color:#f87171;text-transform:uppercase;letter-spacing:0.5px;">
+                <span style="width:5px;height:5px;border-radius:50%;background:#f87171;"></span> Inactive
+              </span>
+            @endif
+          </td>
+
+          {{-- Actions --}}
+          <td style="padding:14px 16px;">
+            <div class="flex items-center justify-end gap-1">
+              <a href="{{ route('teachers.show', $teacher) }}" title="View"
+                 style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text-muted);transition:all 0.2s;"
+                 onmouseover="this.style.background='rgba(56,189,248,0.1)';this.style.color='#38bdf8'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </a>
+              <a href="{{ route('teachers.edit', $teacher) }}" title="Edit"
+                 style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text-muted);transition:all 0.2s;"
+                 onmouseover="this.style.background='rgba(251,191,36,0.1)';this.style.color='#fbbf24'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </a>
+              <form method="POST" action="{{ route('teachers.destroy', $teacher) }}" onsubmit="return confirm('Delete {{ $displayName }}?')" style="display:inline;">
+                @csrf @method('DELETE')
+                <button type="submit" title="Delete"
+                  style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s;"
+                  onmouseover="this.style.background='rgba(248,113,113,0.1)';this.style.color='#f87171'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        @empty
+        <tr>
+          <td colspan="8" style="padding:70px 20px;text-align:center;">
+            <div style="color:var(--text-muted);display:flex;flex-direction:column;align-items:center;gap:10px;">
+              <div style="width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;">
+                <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24" style="opacity:0.4;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div style="font-weight:600;font-size:15px;color:var(--text-secondary);">No teachers found</div>
+              <div style="font-size:13px;">Try adjusting your filters or add a new teacher</div>
+              <a href="{{ route('teachers.create') }}" style="margin-top:8px;padding:9px 20px;background:linear-gradient(135deg,#D4501E,#e8622d);color:white;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">Add First Teacher</a>
+            </div>
+          </td>
+        </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+
+  {{-- Pagination --}}
+  @if(method_exists($teachers ?? [], 'links') && $teachers->hasPages())
+  <div class="flex items-center justify-between px-5 py-4" style="border-top:1px solid rgba(255,255,255,0.07);">
+    <span style="font-size:12px;color:var(--text-muted);">
+      Showing {{ $teachers->firstItem() }}–{{ $teachers->lastItem() }} of {{ $teachers->total() }} teachers
+    </span>
+    <div>{{ $teachers->links() }}</div>
+  </div>
+  @endif
+</div>
+
 <script>
-    $(document).ready(function() {
-        var table = $('#teachers-table').DataTable({
-            "paging": true,
-            "ordering": true,
-            "info": true,
-            "searching": true,
-            "responsive": true,
-            "pageLength": 10,
-            "dom": "rt",
-            "language": {
-                "paginate": {
-                    "previous": "Prev",
-                    "next": "Next"
-                }
-            },
-            "drawCallback": function(settings) {
-                var api = this.api();
-                var info = api.page.info();
-                
-                // Update Info Text
-                var start = info.recordsTotal > 0 ? info.start + 1 : 0;
-                $('#custom-info').html(
-                    `Showing <span class="text-slate-900 font-bold">${start}</span> to <span class="text-slate-900 font-bold">${info.end}</span> of <span class="text-slate-900 font-bold">${info.recordsTotal}</span> Teachers`
-                );
-
-                // Update Pagination Buttons
-                var $pagination = $('#custom-pagination');
-                $pagination.empty();
-                
-                if (info.pages > 1) {
-                    var $prev = $('<button type="button" class="custom-page-btn">Prev</button>');
-                    if (info.page === 0) $prev.addClass('disabled');
-                    else $prev.on('click', function() { api.page('previous').draw('page'); });
-                    $pagination.append($prev);
-
-                    for (var i = 0; i < info.pages; i++) {
-                        if (info.pages > 5 && i > 0 && i < info.pages - 1 && Math.abs(i - info.page) > 1) {
-                            if (i == 1 || i == info.pages - 2) $pagination.append('<span class="px-1 text-slate-300">...</span>');
-                            continue;
-                        }
-                        
-                        var $page = $('<button type="button" class="custom-page-btn">' + (i + 1) + '</button>');
-                        if (i === info.page) $page.addClass('active');
-                        
-                        (function(idx) {
-                            $page.on('click', function() { api.page(idx).draw('page'); });
-                        })(i);
-                        
-                        $pagination.append($page);
-                    }
-
-                    var $next = $('<button type="button" class="custom-page-btn">Next</button>');
-                    if (info.page === info.pages - 1) $next.addClass('disabled');
-                    else $next.on('click', function() { api.page('next').draw('page'); });
-                    $pagination.append($next);
-                }
-            }
-        });
-
-        $('#custom-search').on('keyup', function() {
-            table.search(this.value).draw();
-        });
-
-        $('#custom-length').on('change', function() {
-            table.page.len($(this).val()).draw();
-        });
-    });
+  document.getElementById('selectAll')?.addEventListener('change', function() {
+    document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+  });
 </script>
-@endpush
+
+@endsection

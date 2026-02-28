@@ -57,7 +57,7 @@
         <!-- Header -->
         <div class="md:flex md:items-center md:justify-between mb-8 print:hidden">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-3xl sm:truncate">
+                <h2 class="text-2xl font-bold leading-7 text-slate-800 sm:text-3xl sm:truncate">
                     📄 Preview Admission Form
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">

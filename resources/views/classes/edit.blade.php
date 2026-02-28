@@ -7,7 +7,7 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate">
+                <h2 class="text-xl font-semibold text-slate-800">
                     Edit Class: {{ $class->name }}
                 </h2>
             </div>
@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <div class="bg-slate-50 shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
             <form action="{{ route('classes.update', $class) }}" method="POST" class="space-y-6 p-6">
                 @csrf
                 @method('PUT')

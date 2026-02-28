@@ -7,12 +7,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate">
+                <h2 class="text-xl font-semibold text-slate-800">
                     Role: {{ $role->name }}
                 </h2>
                 <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
                     <div class="mt-2 flex items-center text-sm text-slate-500">
-                        <span class="font-medium text-slate-900 mr-1">Created:</span> {{ $role->created_at->format('M d, Y') }}
+                        <span class="font-medium text-slate-800 mr-1">Created:</span> {{ $role->created_at->format('M d, Y') }}
                     </div>
                 </div>
             </div>
@@ -28,9 +28,9 @@
             </div>
         </div>
 
-        <div class="bg-slate-50 shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 bg-slate-100">
-                <h3 class="text-lg font-medium text-slate-900">Assigned Permissions</h3>
+                <h3 class="text-lg font-medium text-slate-800">Assigned Permissions</h3>
             </div>
             <div class="p-6">
                 <div class="flex flex-wrap gap-2">
@@ -46,9 +46,9 @@
         </div>
         
         <!-- Users with this role -->
-         <div class="mt-8 bg-slate-50 shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+         <div class="mt-8 bg-white rounded-lg border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 bg-slate-100">
-                <h3 class="text-lg font-medium text-slate-900">Users with this Role</h3>
+                <h3 class="text-lg font-medium text-slate-800">Users with this Role</h3>
             </div>
             <div class="p-6">
                 <ul class="divide-y divide-gray-200">
@@ -61,7 +61,7 @@
                                 {{ substr($user->name, 0, 1) }}
                             </div>
                             <div class="ml-3">
-                                <p class="text-sm font-medium text-slate-900">{{ $user->name }}</p>
+                                <p class="text-sm font-medium text-slate-800">{{ $user->name }}</p>
                                 <p class="text-xs text-slate-500">{{ $user->email }}</p>
                             </div>
                         </li>

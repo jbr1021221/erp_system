@@ -8,7 +8,7 @@
 <div class="space-y-6">
     <div class="md:flex md:items-center md:justify-between">
         <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate tracking-tight">
+            <h2 class="text-xl font-semibold text-slate-800 tracking-tight">
                 Yearly Fee Collection Summary
             </h2>
         </div>
@@ -27,7 +27,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <p class="text-sm font-bold text-slate-400 uppercase tracking-wider">Total Collected ({{ $academicYear }})</p>
-            <p class="text-3xl font-extrabold text-slate-900 mt-1">{{ number_format($yearlyTotal, 2) }} TK</p>
+            <p class="text-3xl font-extrabold text-slate-800 mt-1">{{ number_format($yearlyTotal, 2) }} TK</p>
             <div class="mt-2 flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md w-fit">
                 <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
@@ -61,7 +61,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-600 font-medium">
                             {{ number_format($row->payment_count) }} Transactions
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-900 font-bold">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-800 font-bold">
                             {{ number_format($row->total_collected, 2) }} TK
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right">
@@ -86,9 +86,9 @@
                 @if($stats->isNotEmpty())
                 <tfoot class="bg-slate-50">
                     <tr>
-                        <td class="px-6 py-4 text-sm font-extrabold text-slate-900">Grand Total</td>
-                        <td class="px-6 py-4 text-right text-sm font-extrabold text-slate-900">{{ number_format($stats->sum('payment_count')) }}</td>
-                        <td class="px-6 py-4 text-right text-sm font-extrabold text-slate-900">{{ number_format($yearlyTotal, 2) }} TK</td>
+                        <td class="px-6 py-4 text-sm font-extrabold text-slate-800">Grand Total</td>
+                        <td class="px-6 py-4 text-right text-sm font-extrabold text-slate-800">{{ number_format($stats->sum('payment_count')) }}</td>
+                        <td class="px-6 py-4 text-right text-sm font-extrabold text-slate-800">{{ number_format($yearlyTotal, 2) }} TK</td>
                         <td></td>
                     </tr>
                 </tfoot>

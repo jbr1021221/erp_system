@@ -12,7 +12,7 @@
         @foreach($settings as $group => $items)
         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 bg-slate-100">
-                <h3 class="text-lg font-bold text-slate-900 capitalize">{{ $group }} Settings</h3>
+                <h3 class="text-lg font-bold text-slate-800 capitalize">{{ $group }} Settings</h3>
                 <p class="mt-1 text-sm text-slate-500">Configure your {{ $group }} identifiers and preferences.</p>
             </div>
             <div class="p-6">

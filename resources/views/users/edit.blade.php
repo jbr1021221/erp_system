@@ -7,7 +7,7 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate">
+                <h2 class="text-xl font-semibold text-slate-800">
                     Edit User: {{ $user->name }}
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">
@@ -21,7 +21,7 @@
             </div>
         </div>
 
-        <div class="bg-slate-50 shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+        <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
             <form action="{{ route('users.update', $user) }}" method="POST" enctype="multipart/form-data" class="space-y-6 p-6">
                 @csrf
                 @method('PUT')
@@ -41,7 +41,7 @@
                                 </span>
                             @endif
                             <div class="ml-4">
-                                <input type="file" name="photo" id="photo" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-900 hover:file:bg-slate-200">
+                                <input type="file" name="photo" id="photo" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-800 hover:file:bg-slate-200">
                             </div>
                         </div>
                     </div>

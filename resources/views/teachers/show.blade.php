@@ -30,7 +30,7 @@
             <div class="flex-1 space-y-2">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 class="text-3xl font-black text-slate-900 tracking-tight">{{ $teacher->name }}</h1>
+                        <h1 class="text-3xl font-black text-slate-800 tracking-tight">{{ $teacher->name }}</h1>
                         <p class="text-sm font-bold text-indigo-600 uppercase tracking-widest">{{ $teacher->designation }}</p>
                     </div>
                     <div class="flex items-center gap-2">
@@ -55,7 +55,7 @@
             <!-- Contact Box -->
             <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
                 <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <svg class="w-3 h-3 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 h-3 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                     Contact Details
@@ -107,7 +107,7 @@
             <!-- Professional Info -->
             <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-8">
                 <div class="flex items-center justify-between border-b border-slate-50 pb-6">
-                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-3">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
                         <span class="h-2 w-2 rounded-full bg-slate-900"></span>
                         Professional Profile
                     </h3>
@@ -116,20 +116,20 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-1">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Joining Date</p>
-                        <p class="text-lg font-bold text-slate-900">{{ $teacher->join_date->format('F d, Y') }}</p>
+                        <p class="text-lg font-bold text-slate-800">{{ $teacher->join_date->format('F d, Y') }}</p>
                         <p class="text-xs text-slate-400 font-medium tracking-tight">Part of institution for {{ $teacher->join_date->diffForHumans(null, true) }}</p>
                     </div>
 
                     <div class="space-y-1">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Monthly Salary</p>
-                        <p class="text-lg font-bold text-slate-900">${{ number_format($teacher->salary, 2) }}</p>
+                        <p class="text-lg font-bold text-slate-800">${{ number_format($teacher->salary, 2) }}</p>
                         <p class="text-[10px] px-2 py-0.5 inline-block bg-indigo-50 text-indigo-600 rounded-md font-black uppercase tracking-widest">Standard Package</p>
                     </div>
 
                     <div class="space-y-1">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Current Designation</p>
                         <div class="flex items-center gap-2">
-                             <p class="text-lg font-bold text-slate-900">{{ $teacher->designation }}</p>
+                             <p class="text-lg font-bold text-slate-800">{{ $teacher->designation }}</p>
                         </div>
                     </div>
 

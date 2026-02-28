@@ -60,7 +60,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h2 class="text-3xl font-bold text-slate-900">Admission Completed Successfully!</h2>
+            <h2 class="text-3xl font-bold text-slate-800">Admission Completed Successfully!</h2>
             <p class="mt-2 text-lg text-slate-600">
                 Student <span class="font-bold">{{ $student->full_name }}</span> has been admitted to Class <span class="font-bold">{{ $student->class->name ?? 'N/A' }}</span>.
             </p>

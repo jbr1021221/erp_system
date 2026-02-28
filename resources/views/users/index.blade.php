@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate">
+                <h2 class="text-xl font-semibold text-slate-800">
                     User Management
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">
@@ -102,7 +102,7 @@
                                         @endif
                                     </div>
                                     <div class="ml-4">
-                                        <div class="text-sm font-medium text-slate-900">{{ $user->name }}</div>
+                                        <div class="text-sm font-medium text-slate-800">{{ $user->name }}</div>
                                         <div class="text-xs text-slate-500">{{ $user->email }}</div>
                                     </div>
                                 </div>
@@ -127,7 +127,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex justify-end space-x-3">
                                     {{-- @can('user-list')
-                                    <a href="{{ route('users.show', $user) }}" class="text-slate-800 hover:text-slate-900" title="View">
+                                    <a href="{{ route('users.show', $user) }}" class="text-slate-800 hover:text-slate-800" title="View">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -160,7 +160,7 @@
                         @empty
                         <tr>
                             <td colspan="5" class="px-6 py-8 text-center text-slate-500">
-                                <p class="text-lg font-medium text-slate-900">No users found</p>
+                                <p class="text-lg font-medium text-slate-800">No users found</p>
                             </td>
                         </tr>
                         @endforelse

@@ -7,7 +7,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate">
+                <h2 class="text-xl font-semibold text-slate-800">
                     Create New Role
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">
@@ -24,7 +24,7 @@
         <form action="{{ route('roles.store') }}" method="POST" class="space-y-6">
             @csrf
             
-            <div class="bg-slate-50 shadow-sm rounded-xl border border-slate-200 p-6">
+            <div class="bg-white rounded-lg border border-slate-200 p-6">
                 <div>
                     <label for="name" class="block text-sm font-medium text-slate-700">Role Name <span class="text-red-500">*</span></label>
                     <div class="mt-1">
@@ -34,11 +34,11 @@
                 </div>
             </div>
 
-            <div class="bg-slate-50 shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-200 bg-slate-100 flex justify-between items-center">
-                    <h3 class="text-lg font-medium text-slate-900">Permissions</h3>
+                    <h3 class="text-lg font-medium text-slate-800">Permissions</h3>
                     <div class="flex space-x-2">
-                        <button type="button" onclick="selectAll()" class="text-xs text-slate-800 hover:text-slate-900">Select All</button>
+                        <button type="button" onclick="selectAll()" class="text-xs text-slate-800 hover:text-slate-800">Select All</button>
                         <span class="text-slate-300">|</span>
                         <button type="button" onclick="deselectAll()" class="text-xs text-slate-500 hover:text-slate-800">Deselect All</button>
                     </div>
@@ -48,7 +48,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($permissionGroups as $group => $permissions)
                         <div class="border border-slate-200 rounded-xl p-6 bg-slate-100 bg-opacity-50">
-                            <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-3">{{ ucfirst($group) }} Management</h4>
+                            <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">{{ ucfirst($group) }} Management</h4>
                             <div class="space-y-2">
                                 @foreach($permissions as $permission)
                                 <div class="flex items-start">

@@ -1,0 +1,38 @@
+/* Laravel Pagination */
+nav[aria-label="Pagination"] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+nav[aria-label="Pagination"] span,
+nav[aria-label="Pagination"] a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+}
+nav[aria-label="Pagination"] a:hover {
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+}
+nav[aria-label="Pagination"] span[aria-current="page"] {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+}
+nav[aria-label="Pagination"] span.cursor-default {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

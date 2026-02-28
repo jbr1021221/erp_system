@@ -8,7 +8,7 @@
 <div class="max-w-3xl mx-auto space-y-6">
     <div class="md:flex md:items-center md:justify-between">
         <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate tracking-tight">
+            <h2 class="text-xl font-semibold text-slate-800 tracking-tight">
                 Define New Class Fee
             </h2>
         </div>

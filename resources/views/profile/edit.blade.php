@@ -10,7 +10,7 @@
     <!-- Profile Information -->
     <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
-            <h3 class="text-lg font-bold text-slate-900">Profile Information</h3>
+            <h3 class="text-lg font-bold text-slate-800">Profile Information</h3>
             <p class="mt-1 text-sm text-slate-500">Update your account's profile information and email address.</p>
         </div>
         <div class="p-6">
@@ -41,7 +41,7 @@
                                 file:mr-4 file:py-2 file:px-4
                                 file:rounded-full file:border-0
                                 file:text-sm file:font-semibold
-                                file:bg-slate-100 file:text-slate-900
+                                file:bg-slate-100 file:text-slate-800
                                 hover:file:bg-slate-200
                                 transition-colors cursor-pointer
                             "/>
@@ -66,7 +66,7 @@
                         <div class="mt-2">
                             <p class="text-sm text-slate-800">
                                 {{ __('Your email address is unverified.') }}
-                                <button form="send-verification" class="underline text-sm text-slate-800 hover:text-slate-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+                                <button form="send-verification" class="underline text-sm text-slate-800 hover:text-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
                                     {{ __('Click here to re-send the verification email.') }}
                                 </button>
                             </p>
@@ -98,7 +98,7 @@
     <!-- Update Password -->
     <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
-            <h3 class="text-lg font-bold text-slate-900">Update Password</h3>
+            <h3 class="text-lg font-bold text-slate-800">Update Password</h3>
             <p class="mt-1 text-sm text-slate-500">Ensure your account is using a long, random password to stay secure.</p>
         </div>
         <div class="p-6">
@@ -157,7 +157,7 @@
                     @csrf
                     @method('delete')
 
-                    <h2 class="text-lg font-medium text-slate-900">
+                    <h2 class="text-lg font-medium text-slate-800">
                         {{ __('Are you sure you want to delete your account?') }}
                     </h2>
 

@@ -7,7 +7,7 @@
     <!-- Page Header -->
     <div class="md:flex md:items-center md:justify-between">
         <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate tracking-tight">
+            <h2 class="text-xl font-semibold text-slate-800 tracking-tight">
                 {{ $student->full_name }}'s Academic Profile
             </h2>
         </div>
@@ -42,7 +42,7 @@
                             <span class="absolute -bottom-1 -right-1 block h-4 w-4 rounded-full ring-2 ring-white {{ $student->status === 'active' ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
                         </div>
                         <div>
-                            <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">{{ $student->full_name }}</h2>
+                            <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ $student->full_name }}</h2>
                             <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $student->student_id }}</p>
                             <div class="mt-2 flex gap-2">
                                 <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-indigo-600 text-white">
@@ -206,7 +206,7 @@
                                     {{ $payment->status }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-black text-slate-900">
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-black text-slate-800">
                                 {{ number_format($payment->amount, 2) }} TK
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

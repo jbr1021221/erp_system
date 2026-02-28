@@ -1,175 +1,161 @@
 @extends('layouts.app')
-
-@section('title', 'Payments - ERP System')
+@section('page-title', 'Income & Fees')
+@section('breadcrumb', 'Finance · Payments')
 
 @section('content')
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="md:flex md:items-center md:justify-between mb-8">
-            <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate">
-                    Payments History
-                </h2>
-                <p class="mt-1 text-sm text-slate-500">
-                    Track all fee collections and financial transactions.
-                </p>
-            </div>
-            @can('payment-create')
-            <div class="mt-4 flex md:mt-0 md:ml-4">
-                <a href="{{ route('payments.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
-                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Record Payment
-                </a>
-            </div>
-            @endcan
-        </div>
 
-        <!-- Filters -->
-        <div class="rounded-xl shadow-sm p-5 mb-8" style="background-color: rgb(var(--bg-elevated)); border: 1px solid rgb(var(--border-primary));">
-            <form action="{{ route('payments.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="col-span-1 md:col-span-2">
-                    <label for="search" class="sr-only">Search</label>
-                    <div class="relative rounded-md shadow-sm">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </div>
-                        <input type="text" name="search" id="search" class="focus:ring-slate-500 focus:border-slate-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-2.5" placeholder="Search by receipt, student name or ID..." value="{{ request('search') }}" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <input type="date" name="start_date" class="block w-full pl-3 pr-2 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" value="{{ request('start_date') }}" placeholder="Start Date" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
-                    </div>
-                    <div>
-                        <input type="date" name="end_date" class="block w-full pl-3 pr-2 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" value="{{ request('end_date') }}" placeholder="End Date" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="payment_method" class="sr-only">Method</label>
-                    <select name="payment_method" id="payment_method" class="block w-full pl-3 pr-10 py-2.5 text-lg border-slate-300 focus:outline-none focus:ring-slate-500 focus:border-slate-500 sm:text-sm rounded-xl" style="background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-primary));">
-                        <option value="">All Methods</option>
-                        <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
-                        <option value="bank_transfer" {{ request('payment_method') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                        <option value="online" {{ request('payment_method') == 'online' ? 'selected' : '' }}>Online</option>
-                        <option value="cheque" {{ request('payment_method') == 'cheque' ? 'selected' : '' }}>Cheque</option>
-                        <option value="card" {{ request('payment_method') == 'card' ? 'selected' : '' }}>Card</option>
-                    </select>
-                </div>
-
-                <div class="md:col-span-4 flex justify-end">
-                    <a href="{{ route('payments.index') }}" class="mr-3 inline-flex items-center px-4 py-2 shadow-sm text-sm font-medium rounded-xl transition-colors" style="border: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-secondary));" onmouseover="this.style.backgroundColor='rgb(var(--bg-secondary))';" onmouseout="this.style.backgroundColor='rgb(var(--bg-elevated));';">
-                        Reset
-                    </a>
-                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-slate-900 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
-                        Apply Filters
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Payments Table -->
-        <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                Payment Info
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                Student
-                            </th>
-                             <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                Date
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                Method
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                Amount
-                            </th>
-                            <th scope="col" class="relative px-6 py-3 text-right">
-                                <span class="sr-only">Actions</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-slate-50 divide-y divide-gray-200">
-                        @forelse($payments as $payment)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-slate-800">{{ $payment->receipt_number }}</span>
-                                    <span class="text-xs text-slate-500">{{ $payment->fee_type ?? 'Fee' }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-8 w-8">
-                                         @if($payment->student->photo ?? false)
-                                            <img class="h-8 w-8 rounded-full object-cover" src="{{ Storage::url($payment->student->photo) }}" alt="">
-                                        @else
-                                            <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
-                                                {{ substr($payment->student->first_name ?? 'U', 0, 1) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="ml-3">
-                                        <div class="text-sm font-medium text-slate-900">{{ $payment->student->full_name ?? 'Unknown Student' }}</div>
-                                        <div class="text-xs text-slate-500">{{ $payment->student->student_id ?? '' }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                {{ $payment->payment_date->format('M d, Y') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-100 text-slate-800 capitalize">
-                                    {{ str_replace('_', ' ', $payment->payment_method) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-slate-900">
-                                ৳{{ number_format($payment->amount) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="{{ route('payments.receipt', ['receipt_number' => $payment->receipt_number]) }}" class="text-indigo-600 hover:text-indigo-900 inline-flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Receipt
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-slate-500">
-                                <div class="flex flex-col items-center justify-center">
-                                    <svg class="h-12 w-12 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p class="text-lg font-medium text-slate-900">No payments found</p>
-                                    <p class="text-sm text-slate-500">Try adjusting your filters.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            @if($payments->hasPages())
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200">
-                {{ $payments->withQueryString()->links() }}
-            </div>
-            @endif
-        </div>
-    </div>
+{{-- Header --}}
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);">Income & Fees</h1>
+    <p style="font-size:13px;color:var(--text-muted);margin-top:2px;">Track all student payments and outstanding balances</p>
+  </div>
+  <div class="flex gap-2">
+    <a href="{{ route('fee-structures.index') }}"
+       style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:10px;font-size:13px;font-weight:500;color:var(--text-secondary);text-decoration:none;transition:all 0.2s;"
+       onmouseover="this.style.background='var(--bg-surface-2)'" onmouseout="this.style.background='var(--bg-surface)'">
+      Fee Structure
+    </a>
+    <a href="{{ route('payments.create') }}"
+       style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--accent);border-radius:10px;font-size:13px;font-weight:600;color:white;text-decoration:none;"
+       onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Collect Fee
+    </a>
+  </div>
 </div>
+
+{{-- Summary Cards --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+  @php
+    $summaryCards = [
+      ['label'=>'Total Collected','value'=>'৳'.number_format($totalCollected ?? 0),'color'=>'var(--accent-green)','bg'=>'rgba(44,110,73,0.1)'],
+      ['label'=>'This Month','value'=>'৳'.number_format($monthCollected ?? 0),'color'=>'var(--accent-info)','bg'=>'rgba(26,82,118,0.1)'],
+      ['label'=>'Outstanding','value'=>'৳'.number_format($totalOutstanding ?? 0),'color'=>'var(--accent)','bg'=>'rgba(212,80,30,0.1)'],
+      ['label'=>'Partial Payments','value'=>$partialCount ?? 0,'color'=>'var(--accent-gold)','bg'=>'rgba(201,168,76,0.1)'],
+    ];
+  @endphp
+  @foreach($summaryCards as $i => $sc)
+  <div class="animate-in delay-{{ $i+1 }} rounded-2xl p-4" style="background:{{ $sc['bg'] }};border:1px solid {{ $sc['bg'] }};">
+    <div style="font-size:11px;font-weight:500;color:{{ $sc['color'] }};text-transform:uppercase;letter-spacing:0.5px;">{{ $sc['label'] }}</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:{{ $sc['color'] }};margin-top:4px;">{{ $sc['value'] }}</div>
+  </div>
+  @endforeach
+</div>
+
+{{-- Filters --}}
+<div class="card p-4 mb-4 animate-in delay-2">
+  <form method="GET" action="{{ route('payments.index') }}" class="flex flex-wrap gap-3 items-end">
+    <div class="flex-1 min-w-[160px]">
+      <label style="font-size:11px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px;">SEARCH STUDENT</label>
+      <div class="relative">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-muted);"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Name or ID..."
+          style="width:100%;height:40px;padding:0 12px 0 34px;border:1px solid var(--border-color);border-radius:10px;font-size:13px;background:var(--bg-base);color:var(--text-primary);outline:none;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+      </div>
+    </div>
+    <div class="min-w-[130px]">
+      <label style="font-size:11px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px;">STATUS</label>
+      <select name="status" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border-color);border-radius:10px;font-size:13px;background:var(--bg-base);color:var(--text-primary);outline:none;cursor:pointer;">
+        <option value="">All</option>
+        <option value="paid" {{ request('status')=='paid' ? 'selected' : '' }}>Paid</option>
+        <option value="partial" {{ request('status')=='partial' ? 'selected' : '' }}>Partial</option>
+        <option value="overdue" {{ request('status')=='overdue' ? 'selected' : '' }}>Overdue</option>
+      </select>
+    </div>
+    <div class="min-w-[130px]">
+      <label style="font-size:11px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px;">CLASS</label>
+      <select name="class_id" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border-color);border-radius:10px;font-size:13px;background:var(--bg-base);color:var(--text-primary);outline:none;cursor:pointer;">
+        <option value="">All Classes</option>
+        @foreach($classes ?? [] as $class)
+          <option value="{{ $class->id }}" {{ request('class_id')==$class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+        @endforeach
+      </select>
+    </div>
+    <div class="min-w-[120px]">
+      <label style="font-size:11px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px;">FROM DATE</label>
+      <input type="date" name="from" value="{{ request('from') }}" style="width:100%;height:40px;padding:0 10px;border:1px solid var(--border-color);border-radius:10px;font-size:13px;background:var(--bg-base);color:var(--text-primary);outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+    </div>
+    <div class="flex gap-2">
+      <button type="submit" style="height:40px;padding:0 18px;background:var(--accent);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Filter</button>
+      <a href="{{ route('payments.index') }}" style="height:40px;padding:0 14px;display:inline-flex;align-items:center;background:var(--bg-surface-2);border-radius:10px;font-size:13px;color:var(--text-muted);text-decoration:none;">Clear</a>
+    </div>
+  </form>
+</div>
+
+{{-- Table --}}
+<div class="card overflow-hidden animate-in delay-3">
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr style="background:var(--bg-surface-2);border-bottom:1px solid var(--border-color);">
+          <th class="text-left" style="padding:12px 20px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Student</th>
+          <th class="text-left" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Class</th>
+          <th class="text-right" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Amount Due</th>
+          <th class="text-right" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Paid</th>
+          <th class="text-right" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Balance</th>
+          <th class="text-left" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Date</th>
+          <th class="text-left" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Status</th>
+          <th class="text-right" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($payments ?? [] as $payment)
+        @php
+          $pname = $payment->student->name ?? 'Unknown';
+          $pi = implode('', array_map(fn($p)=>strtoupper($p[0]), array_slice(explode(' ',$pname),0,2)));
+          $statusColor = ['paid'=>'var(--accent-green)','partial'=>'var(--accent-gold)','overdue'=>'var(--accent)'][$payment->status ?? 'paid'] ?? 'var(--text-muted)';
+          $balance = ($payment->amount_due ?? 0) - ($payment->amount_paid ?? 0);
+        @endphp
+        <tr style="border-bottom:1px solid var(--border-color);border-left:3px solid {{ $statusColor }};transition:background 0.15s;"
+            onmouseover="this.style.background='var(--bg-surface-2)'" onmouseout="this.style.background='transparent'">
+          <td style="padding:14px 20px;">
+            <div class="flex items-center gap-3">
+              <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-gold));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:white;flex-shrink:0;">{{ $pi }}</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ $pname }}</div>
+                <div style="font-size:11px;color:var(--text-muted);">{{ $payment->student->student_id ?? '' }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="padding:14px 16px;font-size:13px;color:var(--text-secondary);">{{ $payment->student->schoolClass->name ?? '—' }}</td>
+          <td style="padding:14px 16px;text-align:right;font-family:'Syne',sans-serif;font-weight:600;font-size:14px;color:var(--text-primary);">৳{{ number_format($payment->amount_due ?? 0) }}</td>
+          <td style="padding:14px 16px;text-align:right;font-family:'Syne',sans-serif;font-weight:600;font-size:14px;color:var(--accent-green);">৳{{ number_format($payment->amount_paid ?? 0) }}</td>
+          <td style="padding:14px 16px;text-align:right;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:{{ $balance > 0 ? 'var(--accent)' : 'var(--text-muted)' }};">৳{{ number_format($balance) }}</td>
+          <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">{{ \Carbon\Carbon::parse($payment->created_at)->format('M j, Y') }}</td>
+          <td style="padding:14px 16px;">
+            <span class="badge {{ $payment->status === 'paid' ? 'badge-green' : ($payment->status === 'partial' ? 'badge-gold' : 'badge-red') }}">
+              {{ ucfirst($payment->status ?? 'paid') }}
+            </span>
+          </td>
+          <td style="padding:14px 16px;">
+            <div class="flex items-center justify-end gap-1">
+              <a href="{{ route('payments.show', $payment) }}" title="Receipt"
+                 style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text-muted);transition:all 0.2s;"
+                 onmouseover="this.style.background='rgba(26,82,118,0.1)';this.style.color='var(--accent-info)'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </a>
+              <a href="{{ route('payments.edit', $payment) }}" title="Edit"
+                 style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text-muted);transition:all 0.2s;"
+                 onmouseover="this.style.background='rgba(201,168,76,0.1)';this.style.color='var(--accent-gold)'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </a>
+            </div>
+          </td>
+        </tr>
+        @empty
+        <tr><td colspan="8" style="padding:60px;text-align:center;color:var(--text-muted);font-size:13px;">No payment records found</td></tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+  @if(method_exists($payments ?? collect(), 'hasPages') && ($payments->hasPages()))
+  <div class="flex items-center justify-between px-5 py-4" style="border-top:1px solid var(--border-color);">
+    <span style="font-size:12px;color:var(--text-muted);">Showing {{ $payments->firstItem() }}–{{ $payments->lastItem() }} of {{ $payments->total() }} records</span>
+    {{ $payments->links() }}
+  </div>
+  @endif
+</div>
+
 @endsection

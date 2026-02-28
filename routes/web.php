@@ -22,6 +22,20 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/chart-data', function(\Illuminate\Http\Request $request) {
+        $months = (int) $request->get('months', 6);
+        $data = [];
+        $labels = [];
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $labels[] = $date->format('M Y');
+            // Replace with your actual payment model query:
+            $data[] = \App\Models\Payment::whereYear('created_at', $date->year)
+                        ->whereMonth('created_at', $date->month)
+                        ->sum('amount') ?? 0;
+        }
+        return response()->json(['labels' => $labels, 'data' => $data]);
+    });
     
     // Students
     Route::resource('students', StudentController::class);

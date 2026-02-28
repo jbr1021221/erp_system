@@ -57,7 +57,7 @@
         <!-- Header -->
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-3xl sm:truncate">
+                <h2 class="text-2xl font-bold leading-7 text-slate-800 sm:text-3xl sm:truncate">
                     Select Fees for {{ $student->full_name }}
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">
@@ -86,9 +86,9 @@
         <form action="{{ route('students.store-fees', $student) }}" method="POST" class="space-y-6">
             @csrf
 
-            <div class="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+            <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-                    <h3 class="text-lg font-bold text-slate-900">📋 Available Fees for {{ $student->class->name ?? 'this class' }}</h3>
+                    <h3 class="text-lg font-bold text-slate-800">📋 Available Fees for {{ $student->class->name ?? 'this class' }}</h3>
                     <p class="mt-1 text-sm text-slate-600">Select which fees apply to this student and configure discounts if applicable.</p>
                 </div>
 
@@ -98,7 +98,7 @@
                         <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <h3 class="mt-2 text-sm font-medium text-slate-900">No fees configured</h3>
+                        <h3 class="mt-2 text-sm font-medium text-slate-800">No fees configured</h3>
                         <p class="mt-1 text-sm text-slate-500">Please configure fee structures for this class first.</p>
                     </div>
                     @else
@@ -117,7 +117,7 @@
                                            onchange="toggleFeeOptions({{ $fee->id }})">
                                 </div>
                                 <div class="ml-4 flex-1">
-                                    <label for="fee_{{ $fee->id }}" class="font-semibold text-slate-900 text-lg cursor-pointer">
+                                    <label for="fee_{{ $fee->id }}" class="font-semibold text-slate-800 text-lg cursor-pointer">
                                         {{ $fee->fee_type }}
                                     </label>
                                     <div class="mt-1 text-sm text-slate-600">
@@ -192,7 +192,7 @@
                                                     <span class="font-semibold text-red-600">- ৳0.00</span>
                                                 </div>
                                                 <div class="flex justify-between items-center text-base mt-2 pt-2 border-t border-slate-200">
-                                                    <span class="text-slate-900 font-bold">Final Amount:</span>
+                                                    <span class="text-slate-800 font-bold">Final Amount:</span>
                                                     <span class="font-bold text-green-600" id="final_amount_{{ $fee->id }}">৳{{ number_format($fee->amount, 2) }}</span>
                                                 </div>
                                             </div>

@@ -57,7 +57,7 @@
         <!-- Header -->
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-3xl sm:truncate">
+                <h2 class="text-2xl font-bold leading-7 text-slate-800 sm:text-3xl sm:truncate">
                     💳 Admission Payment
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">
@@ -90,9 +90,9 @@
 
                     <!-- Admission Fee Card -->
                     @if($admissionFee)
-                    <div class="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden mb-6">
+                    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden mb-6">
                         <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-green-50 to-emerald-50">
-                            <h3 class="text-lg font-bold text-slate-900">🎓 Admission Fee</h3>
+                            <h3 class="text-lg font-bold text-slate-800">🎓 Admission Fee</h3>
                             <p class="mt-1 text-sm text-slate-600">Pay full or partial amount now</p>
                         </div>
 
@@ -263,9 +263,9 @@
             <div class="lg:col-span-1">
                 <!-- Payment Summary -->
                 @if($admissionFee)
-                <div class="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden mb-6 sticky top-6">
+                <div class="bg-white rounded-lg border border-slate-200 overflow-hidden mb-6 sticky top-6">
                     <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
-                        <h3 class="text-lg font-bold text-slate-900">📊 Payment Summary</h3>
+                        <h3 class="text-lg font-bold text-slate-800">📊 Payment Summary</h3>
                     </div>
 
                     <div class="p-6 space-y-4">
@@ -281,7 +281,7 @@
 
                         <div class="pt-4 border-t border-slate-200">
                             <div class="flex justify-between items-center">
-                                <span class="text-slate-900 font-bold">Remaining Balance:</span>
+                                <span class="text-slate-800 font-bold">Remaining Balance:</span>
                                 <span class="text-lg font-bold text-red-600">৳<span id="remaining_balance">0.00</span></span>
                             </div>
                             <p class="text-xs text-slate-500 mt-2">Can be paid in future payments</p>
@@ -292,9 +292,9 @@
 
                 <!-- Other Fees -->
                 @if($otherFees->isNotEmpty())
-                <div class="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+                <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-                        <h3 class="text-lg font-bold text-slate-900">📝 Other Selected Fees</h3>
+                        <h3 class="text-lg font-bold text-slate-800">📝 Other Selected Fees</h3>
                         <p class="mt-1 text-xs text-slate-600">To be paid later</p>
                     </div>
 
@@ -304,11 +304,11 @@
                             <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
                                 <div class="flex justify-between items-start">
                                     <div class="flex-1">
-                                        <p class="text-sm font-semibold text-slate-900">{{ $fee->feeStructure->fee_type }}</p>
+                                        <p class="text-sm font-semibold text-slate-800">{{ $fee->feeStructure->fee_type }}</p>
                                         <p class="text-xs text-slate-500 mt-1">{{ ucfirst(str_replace('_', ' ', $fee->feeStructure->frequency)) }}</p>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-bold text-slate-900">৳{{ number_format($fee->getFinalAmount(), 2) }}</p>
+                                        <p class="text-sm font-bold text-slate-800">৳{{ number_format($fee->getFinalAmount(), 2) }}</p>
                                         @if($fee->discount_type !== 'none')
                                         <p class="text-xs text-red-600">-৳{{ number_format($fee->getDiscountAmount(), 2) }}</p>
                                         @endif
@@ -321,7 +321,7 @@
                         <div class="mt-4 pt-4 border-t border-slate-200">
                             <div class="flex justify-between items-center">
                                 <span class="text-sm text-slate-600">Total Other Fees:</span>
-                                <span class="text-base font-bold text-slate-900">৳{{ number_format($otherFees->sum(fn($f) => $f->getFinalAmount()), 2) }}</span>
+                                <span class="text-base font-bold text-slate-800">৳{{ number_format($otherFees->sum(fn($f) => $f->getFinalAmount()), 2) }}</span>
                             </div>
                         </div>
                     </div>

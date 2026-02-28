@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
-                <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-2xl sm:truncate">
+                <h2 class="text-xl font-semibold text-slate-800">
                     {{ $class->name }}
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">

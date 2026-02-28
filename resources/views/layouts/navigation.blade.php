@@ -15,24 +15,24 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-slate-600 hover:text-slate-900 transition-colors duration-200">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-slate-600 hover:text-slate-800 transition-colors duration-200">
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     
                     @can('student-list')
-                    <x-nav-link :href="route('students.index')" :active="request()->routeIs('students.*')" class="text-slate-600 hover:text-slate-900 transition-colors duration-200">
+                    <x-nav-link :href="route('students.index')" :active="request()->routeIs('students.*')" class="text-slate-600 hover:text-slate-800 transition-colors duration-200">
                         {{ __('Students') }}
                     </x-nav-link>
                     @endcan
 
                     @can('payment-list')
-                    <x-nav-link :href="route('payments.index')" :active="request()->routeIs('payments.*')" class="text-slate-600 hover:text-slate-900 transition-colors duration-200">
+                    <x-nav-link :href="route('payments.index')" :active="request()->routeIs('payments.*')" class="text-slate-600 hover:text-slate-800 transition-colors duration-200">
                         {{ __('Payments') }}
                     </x-nav-link>
                     @endcan
 
                     @can('class-list')
-                    <x-nav-link :href="route('classes.index')" :active="request()->routeIs('classes.*')" class="text-slate-600 hover:text-slate-900 transition-colors duration-200">
+                    <x-nav-link :href="route('classes.index')" :active="request()->routeIs('classes.*')" class="text-slate-600 hover:text-slate-800 transition-colors duration-200">
                         {{ __('Classes') }}
                     </x-nav-link>
                     @endcan
@@ -41,7 +41,7 @@
                     <div class="hidden sm:flex sm:items-center sm:ml-6">
                         <x-dropdown align="right" width="48">
                             <x-slot name="trigger">
-                                <button class="flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 hover:border-slate-300 focus:outline-none focus:text-slate-800 focus:border-slate-300 transition duration-150 ease-in-out">
+                                <button class="flex items-center text-sm font-medium text-slate-600 hover:text-slate-800 hover:border-slate-300 focus:outline-none focus:text-slate-800 focus:border-slate-300 transition duration-150 ease-in-out">
                                     <div>More</div>
                                     <div class="ml-1">
                                         <svg class="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">

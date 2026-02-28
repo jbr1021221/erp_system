@@ -9,7 +9,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-2xl font-black text-slate-900">Add New Teacher</h1>
+            <h1 class="text-2xl font-black text-slate-800">Add New Teacher</h1>
             <p class="text-sm text-slate-500 font-medium mt-1">Onboard a new faculty member to the system</p>
         </div>
         <a href="{{ route('teachers.index') }}" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all">
@@ -31,7 +31,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
-                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest">Personal Information</h2>
+                    <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Personal Information</h2>
                 </div>
             </div>
 

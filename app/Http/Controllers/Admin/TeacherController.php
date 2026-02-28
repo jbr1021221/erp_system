@@ -14,9 +14,9 @@ class TeacherController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:teacher-list', only: ['index']),
+            new Middleware('permission:teacher-list',   only: ['index']),
             new Middleware('permission:teacher-create', only: ['create', 'store']),
-            new Middleware('permission:teacher-edit', only: ['edit', 'update']),
+            new Middleware('permission:teacher-edit',   only: ['edit', 'update']),
             new Middleware('permission:teacher-delete', only: ['destroy']),
         ];
     }
@@ -25,19 +25,61 @@ class TeacherController extends Controller implements HasMiddleware
     {
         $query = Teacher::query();
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('designation', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('name',        'like', "%{$search}%")
+                  ->orWhere('email',       'like', "%{$search}%")
+                  ->orWhere('phone',       'like', "%{$search}%")
+                  ->orWhere('designation', 'like', "%{$search}%")
+                  // Optional columns — won't crash if they don't exist in DB
+                  ->orWhere(function ($q2) use ($search) {
+                      try { $q2->orWhere('subject',    'like', "%{$search}%"); } catch (\Exception $e) {}
+                      try { $q2->orWhere('department', 'like', "%{$search}%"); } catch (\Exception $e) {}
+                  });
             });
         }
 
-        $teachers = $query->latest()->get();
+        // FIX: support both 'department' column filter and 'is_active' / 'status'
+        if ($request->filled('department')) {
+            try {
+                $query->where('department', $request->department);
+            } catch (\Exception $e) {
+                // column doesn't exist yet — silently skip
+            }
+        }
 
-        return view('teachers.index', compact('teachers'));
+        if ($request->filled('status')) {
+            // Support both string 'status' column and boolean 'is_active'
+            if ($request->status === 'active') {
+                $query->where(function ($q) {
+                    $q->where('is_active', true)->orWhere('status', 'active');
+                });
+            } else {
+                $query->where(function ($q) {
+                    $q->where('is_active', false)->orWhere('status', 'inactive');
+                });
+            }
+        }
+
+        // FIX: paginate for proper pagination links
+        $teachers = $query->latest()->paginate(20)->withQueryString();
+
+        // FIX: pass $departments to view so the filter dropdown isn't empty
+        // Try to get distinct departments if the column exists, otherwise return empty
+        try {
+            $departments = Teacher::select('department')
+                ->whereNotNull('department')
+                ->where('department', '!=', '')
+                ->distinct()
+                ->pluck('department')
+                ->sort()
+                ->values();
+        } catch (\Exception $e) {
+            $departments = collect();
+        }
+
+        return view('teachers.index', compact('teachers', 'departments'));
     }
 
     public function create()
@@ -48,15 +90,19 @@ class TeacherController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:teachers,email',
-            'phone' => 'required|string|unique:teachers,phone',
+            'name'        => 'required|string|max:255',
+            'email'       => 'nullable|email|unique:teachers,email',
+            'phone'       => 'required|string|unique:teachers,phone',
             'designation' => 'required|string|max:255',
-            'join_date' => 'required|date',
-            'salary' => 'required|numeric|min:0',
-            'address' => 'nullable|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'is_active' => 'required|boolean',
+            'join_date'   => 'required|date',
+            'salary'      => 'required|numeric|min:0',
+            'address'     => 'nullable|string',
+            'photo'       => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'is_active'   => 'required|boolean',
+            // Optional fields — only validate if they exist in the request
+            'subject'       => 'nullable|string|max:255',
+            'department'    => 'nullable|string|max:255',
+            'qualification' => 'nullable|string|max:255',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -82,15 +128,18 @@ class TeacherController extends Controller implements HasMiddleware
     public function update(Request $request, Teacher $teacher)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:teachers,email,' . $teacher->id,
-            'phone' => 'required|string|unique:teachers,phone,' . $teacher->id,
+            'name'        => 'required|string|max:255',
+            'email'       => 'nullable|email|unique:teachers,email,' . $teacher->id,
+            'phone'       => 'required|string|unique:teachers,phone,' . $teacher->id,
             'designation' => 'required|string|max:255',
-            'join_date' => 'required|date',
-            'salary' => 'required|numeric|min:0',
-            'address' => 'nullable|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'is_active' => 'required|boolean',
+            'join_date'   => 'required|date',
+            'salary'      => 'required|numeric|min:0',
+            'address'     => 'nullable|string',
+            'photo'       => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'is_active'   => 'required|boolean',
+            'subject'       => 'nullable|string|max:255',
+            'department'    => 'nullable|string|max:255',
+            'qualification' => 'nullable|string|max:255',
         ]);
 
         if ($request->hasFile('photo')) {

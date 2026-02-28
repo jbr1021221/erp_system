@@ -35,7 +35,7 @@
                     <div class="space-y-3">
                         <div>
                             <p class="text-xs text-slate-500">Student Name</p>
-                            <p class="text-base font-bold text-slate-900">{{ $payment->student->full_name }}</p>
+                            <p class="text-base font-bold text-slate-800">{{ $payment->student->full_name }}</p>
                         </div>
                         <div>
                             <p class="text-xs text-slate-500">Student ID</p>
@@ -91,7 +91,7 @@
                             @foreach($payments as $index => $item)
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{{ $index + 1 }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">{{ $item->fee_type }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-800">{{ $item->fee_type }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                     @if($item->billing_month)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -103,7 +103,7 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900 text-right">{{ number_format($item->amount, 2) }} TK</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 text-right">{{ number_format($item->amount, 2) }} TK</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -193,7 +193,7 @@
     }
     
     [data-theme="dark"] #receipt-content .text-slate-700,
-    [data-theme="dark"] #receipt-content .text-slate-900 {
+    [data-theme="dark"] #receipt-content .text-slate-800 {
         color: rgb(248 250 252) !important; /* slate-50 */
     }
     
