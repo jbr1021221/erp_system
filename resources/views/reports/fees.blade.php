@@ -2,6 +2,13 @@
 
 @section('title', 'Fee Reports - ERP System')
 
+@section('subnav')
+  <a href="{{ route('users.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('users.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Users</a>
+  <a href="{{ route('roles.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('roles.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Roles & Perms</a>
+  <a href="{{ route('reports.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('reports.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Reports</a>
+@endsection
+
+
 @section('header_title', 'Reports & Analytics')
 
 @section('content')
@@ -95,6 +102,4 @@
                 @endif
             </table>
         </div>
-    </div>
-</div>
-@endsection
+    @endsection

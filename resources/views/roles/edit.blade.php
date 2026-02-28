@@ -2,9 +2,16 @@
 
 @section('title', 'Edit Role - ERP System')
 
+@section('subnav')
+  <a href="{{ route('users.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('users.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Users</a>
+  <a href="{{ route('roles.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('roles.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Roles & Perms</a>
+  <a href="{{ route('reports.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('reports.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Reports</a>
+@endsection
+
+
 @section('content')
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    
         <div class="md:flex md:items-center md:justify-between mb-8">
             <div class="flex-1 min-w-0">
                 <h2 class="text-xl font-semibold text-slate-800">

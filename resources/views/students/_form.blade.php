@@ -16,7 +16,7 @@
         <x-form-field name="date_of_birth" label="Date of Birth" type="date" :value="old('date_of_birth', isset($student) ? \Carbon\Carbon::parse($student->date_of_birth)->format('Y-m-d') : '')" />
         <div>
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Gender</label>
-          <select name="gender" style="width:100%;height:50px;padding:0 14px;border:1px solid {{ $errors->has('gender') ? 'var(--accent)' : 'var(--border-color)' }};border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+          <select name="gender" style="width:100%;height:50px;padding:0 14px;border:1px solid {{ $errors->has('gender') ? 'var(--accent)' : 'var(--border-color)' }};border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">>
             <option value="">Select Gender</option>
             <option value="male" {{ old('gender', $student->gender ?? '') == 'male' ? 'selected' : '' }}>Male</option>
             <option value="female" {{ old('gender', $student->gender ?? '') == 'female' ? 'selected' : '' }}>Female</option>
@@ -27,7 +27,7 @@
         <div class="sm:col-span-2">
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Present Address</label>
           <textarea name="address" rows="2" placeholder="Full address..."
-            style="width:100%;padding:12px 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;resize:vertical;font-family:'DM Sans',sans-serif;"
+            style="width:100%;padding:12px 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;resize:vertical;font-family:'DM Sans',sans-serif;"
             onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">{{ old('address', $student->address ?? '') }}</textarea>
         </div>
       </div>
@@ -42,7 +42,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Class *</label>
-          <select name="class_id" required style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+          <select name="class_id" required style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">>
             <option value="">Select Class</option>
             @foreach($classes ?? [] as $class)
               <option value="{{ $class->id }}" {{ old('class_id', $student->class_id ?? '') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
@@ -55,7 +55,7 @@
         <x-form-field name="admission_date" label="Admission Date *" type="date" :value="old('admission_date', isset($student) ? \Carbon\Carbon::parse($student->admission_date)->format('Y-m-d') : date('Y-m-d'))" required />
         <div>
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Status</label>
-          <select name="status" style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+          <select name="status" style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">>
             <option value="active" {{ old('status', $student->status ?? 'active') == 'active' ? 'selected' : '' }}>Active</option>
             <option value="inactive" {{ old('status', $student->status ?? '') == 'inactive' ? 'selected' : '' }}>Inactive</option>
             <option value="transferred" {{ old('status', $student->status ?? '') == 'transferred' ? 'selected' : '' }}>Transferred</option>
@@ -114,15 +114,13 @@
         <h2 style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--text-primary);">Notes</h2>
       </div>
       <textarea name="notes" rows="4" placeholder="Any special notes about this student..."
-        style="width:100%;padding:12px;border:1px solid var(--border-color);border-radius:12px;font-size:13px;background:var(--bg-base);color:var(--text-primary);outline:none;resize:none;font-family:'DM Sans',sans-serif;"
+        style="width:100%;padding:12px;border:1px solid var(--border-color);border-radius:12px;font-size:13px;background:var(--bg-surface);color:var(--text-primary);outline:none;resize:none;font-family:'DM Sans',sans-serif;"
         onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">{{ old('notes', $student->notes ?? '') }}</textarea>
     </div>
 
     {{-- Form Actions --}}
     <div class="card p-5 animate-in delay-3">
-      <button type="submit"
-        style="width:100%;height:48px;background:var(--accent);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;margin-bottom:10px;"
-        onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">
+      <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 px-4 font-bold text-[15px] transition-colors mb-3">
         {{ isset($student) ? 'Update Student' : 'Create Student' }}
       </button>
       <a href="{{ route('students.index') }}"

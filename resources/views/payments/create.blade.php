@@ -1,6 +1,13 @@
 @extends('layouts.app')
 @section('page-title', 'Collect Fee')
 @section('breadcrumb', 'Finance · Income · Collect')
+
+@section('subnav')
+  <a href="{{ route('payments.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('payments.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Income / Fees</a>
+  <a href="{{ route('fee-structures.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('fee-structures.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Fee Structure</a>
+  <a href="{{ route('expenses.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('expenses.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Expenses</a>
+@endsection
+
 @section('content')
 
 <div class="flex items-center justify-between mb-6">
@@ -29,7 +36,7 @@
         <div>
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Student *</label>
           <select name="student_id" required
-            style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;cursor:pointer;"
+            style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;"
             onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
             <option value="">Search and select student...</option>
             @foreach($students ?? [] as $student)
@@ -51,7 +58,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Fee Type *</label>
-            <select name="fee_type_id" required style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+            <select name="fee_type_id" required style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
               <option value="">Select Fee Type</option>
               @foreach($feeTypes ?? [] as $ft)
                 <option value="{{ $ft->id }}" {{ old('fee_type_id') == $ft->id ? 'selected' : '' }}>{{ $ft->name }}</option>
@@ -64,7 +71,7 @@
           <x-form-field name="amount_paid" label="Amount Paying (৳) *" type="number" :value="old('amount_paid', '')" placeholder="0.00" required />
           <div>
             <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Payment Method *</label>
-            <select name="payment_method" required style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+            <select name="payment_method" required style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
               <option value="">Select Method</option>
               <option value="cash" {{ old('payment_method')=='cash' ? 'selected' : '' }}>Cash</option>
               <option value="bank_transfer" {{ old('payment_method')=='bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
@@ -78,7 +85,7 @@
         <div class="mt-4">
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Notes</label>
           <textarea name="notes" rows="2" placeholder="Optional notes..."
-            style="width:100%;padding:12px 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;resize:none;font-family:'DM Sans',sans-serif;"
+            style="width:100%;padding:12px 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;resize:none;font-family:'DM Sans',sans-serif;"
             onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">{{ old('notes') }}</textarea>
         </div>
       </div>
@@ -117,9 +124,7 @@
 
       {{-- Actions --}}
       <div class="card p-5 animate-in delay-2">
-        <button type="submit"
-          style="width:100%;height:50px;background:var(--accent);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;margin-bottom:10px;"
-          onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 px-4 font-bold text-[15px] transition-colors mb-3">
           Record Payment
         </button>
         <button type="submit" name="print_receipt" value="1"

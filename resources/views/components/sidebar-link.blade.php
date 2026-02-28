@@ -30,7 +30,7 @@
   @endif
 
   {{-- Icon --}}
-  <span class="flex-shrink-0" style="color: {{ $isActive ? 'var(--accent)' : 'var(--text-muted)' }};">
+  <span class="flex-shrink-0" style="color: {{ $isActive ? 'var(--accent)' : 'var(--text-muted)'}};">
     {{ $slot }}
   </span>
 

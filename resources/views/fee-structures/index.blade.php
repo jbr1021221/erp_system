@@ -2,6 +2,13 @@
 @section('page-title', 'Fee Structure')
 @section('breadcrumb', 'Finance · Fees Framework')
 
+@section('subnav')
+  <a href="{{ route('payments.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('payments.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Income / Fees</a>
+  <a href="{{ route('fee-structures.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('fee-structures.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Fee Structure</a>
+  <a href="{{ route('expenses.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('expenses.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Expenses</a>
+@endsection
+
+
 @section('content')
 
 {{-- Header --}}
@@ -10,9 +17,7 @@
     <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);">Fee Structure</h1>
     <p style="font-size:13px;color:var(--text-muted);margin-top:2px;">Pre-defined fees and tuition plans</p>
   </div>
-  <a href="{{ route('fee-structures.create') }}"
-     style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--accent);border-radius:10px;font-size:13px;font-weight:600;color:white;text-decoration:none;transition:all 0.2s;"
-     onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">
+  <a href="{{ route('fee-structures.create') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add Fee Type
   </a>
@@ -58,7 +63,7 @@
     </div>
     <h3 style="font-weight:600;font-size:16px;color:var(--text-primary);">No fee structures found</h3>
     <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Define standard fees to assign them to students during admission.</p>
-    <a href="{{ route('fee-structures.create') }}" style="display:inline-block;margin-top:16px;padding:9px 20px;background:var(--accent);color:white;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">Add First Fee Type</a>
+    <a href="{{ route('fee-structures.create') }}" class="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">Add First Fee Type</a>
   </div>
   @endforelse
 </div>

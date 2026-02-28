@@ -2,6 +2,13 @@
 @section('page-title', 'Students')
 @section('breadcrumb', 'Academics · All Students')
 
+@section('subnav')
+  <a href="{{ route('students.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('students.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Students</a>
+  <a href="{{ route('teachers.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('teachers.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Teachers</a>
+  <a href="{{ route('classes.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('classes.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800'}}">Classes</a>
+@endsection
+
+
 @section('content')
 
 {{-- Page Header --}}
@@ -22,9 +29,7 @@
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
       Export
     </a>
-    <a href="{{ route('students.create') }}"
-       style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:linear-gradient(135deg,#D4501E,#e8622d);border-radius:10px;font-size:13px;font-weight:600;color:white;text-decoration:none;transition:all 0.2s;box-shadow:0 4px 15px rgba(212,80,30,0.3);"
-       onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(212,80,30,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(212,80,30,0.3)'">
+    <a href="{{ route('students.create') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add Student
     </a>
@@ -46,8 +51,8 @@
     ['Other',    $otherCount,    '#fb923c', 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
   ] as [$label, $count, $color, $icon])
   <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
-    <div style="width:36px;height:36px;border-radius:9px;background:{{ $color }}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <svg width="16" height="16" fill="none" stroke="{{ $color }}" stroke-width="2" viewBox="0 0 24 24"><path d="{{ $icon }}"/></svg>
+    <div style="display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg class="w-5 h-5 text-slate-300 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="{{ $icon }}"/></svg>
     </div>
     <div>
       <div style="font-size:20px;font-weight:700;font-family:'Syne',sans-serif;color:{{ $color }};line-height:1;">{{ $count }}</div>
@@ -88,7 +93,7 @@
       </select>
     </div>
     <div class="flex gap-2">
-      <button type="submit" style="height:40px;padding:0 18px;background:linear-gradient(135deg,#D4501E,#e8622d);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">Filter</button>
+      <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">Filter</button>
       <a href="{{ route('students.index') }}" style="height:40px;padding:0 14px;display:inline-flex;align-items:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:13px;color:var(--text-muted);text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Clear</a>
     </div>
   </form>
@@ -99,16 +104,16 @@
   <div class="overflow-x-auto">
     <table class="w-full" style="border-collapse:collapse;">
       <thead>
-        <tr style="background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.08);">
-          <th style="width:44px;padding:13px 16px;">
+        <tr class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 font-medium">
+          <th style="width:44px;" class="px-4 py-3">
             <input type="checkbox" id="selectAll" style="accent-color:#D4501E;width:15px;height:15px;cursor:pointer;">
           </th>
-          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Student</th>
-          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Class</th>
-          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Guardian</th>
-          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Admitted</th>
-          <th class="text-left" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Status</th>
-          <th class="text-right" style="padding:13px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;">Actions</th>
+          <th class="text-left px-4 py-3">Student</th>
+          <th class="text-left px-4 py-3">Class</th>
+          <th class="text-left px-4 py-3">Guardian</th>
+          <th class="text-left px-4 py-3">Admitted</th>
+          <th class="text-left px-4 py-3">Status</th>
+          <th class="text-right px-4 py-3">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -128,12 +133,11 @@
           $className = optional($student->class)->name ?? optional($student->schoolClass)->name ?? '—';
           $sectionName = optional($student->section)->name ?? ($student->section_name ?? '');
         @endphp
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s;"
-            onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
-          <td style="padding:14px 16px;">
+        <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+          <td class="px-4 py-3.5">
             <input type="checkbox" class="row-check" style="accent-color:#D4501E;width:15px;height:15px;cursor:pointer;">
           </td>
-          <td style="padding:14px 16px;">
+          <td class="px-4 py-3.5">
             <div class="flex items-center gap-3">
               <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,{{ $g[0] }},{{ $g[1] }});display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:white;flex-shrink:0;box-shadow:0 2px 8px {{ $g[0] }}40;">
                 {{ $initials }}
@@ -148,7 +152,7 @@
               </div>
             </div>
           </td>
-          <td style="padding:14px 16px;">
+          <td class="px-4 py-3.5">
             @if($className !== '—')
               <span style="display:inline-block;padding:3px 10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.25);border-radius:6px;font-size:12px;font-weight:600;color:#818cf8;">
                 {{ $className }}
@@ -160,14 +164,14 @@
               <span style="color:var(--text-muted);font-size:13px;">—</span>
             @endif
           </td>
-          <td style="padding:14px 16px;">
+          <td class="px-4 py-3.5">
             <div style="font-size:13px;font-weight:500;color:var(--text-secondary);">{{ $student->guardian_name ?? '—' }}</div>
             <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">{{ $student->guardian_phone ?? '' }}</div>
           </td>
-          <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">
+          <td class="px-4 py-3.5 text-slate-500 text-xs">
             {{ \Carbon\Carbon::parse($student->enrollment_date ?? $student->admission_date ?? $student->created_at)->format('M j, Y') }}
           </td>
-          <td style="padding:14px 16px;">
+          <td class="px-4 py-3.5">
             @php
               $statusColors = [
                 'active'      => ['bg'=>'rgba(74,222,128,0.12)','border'=>'rgba(74,222,128,0.3)','text'=>'#4ade80'],
@@ -183,24 +187,21 @@
               {{ ucfirst($student->status ?? 'active') }}
             </span>
           </td>
-          <td style="padding:14px 16px;">
+          <td class="px-4 py-3.5">
             <div class="flex items-center justify-end gap-1">
               <a href="{{ route('students.show', $student) }}" title="View"
-                 style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text-muted);transition:all 0.2s;"
-                 onmouseover="this.style.background='rgba(56,189,248,0.1)';this.style.color='#38bdf8'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                 class="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md p-1.5 transition">
+                <svg width="15" height="15" fill="none" class="stroke-current" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </a>
               <a href="{{ route('students.edit', $student) }}" title="Edit"
-                 style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text-muted);transition:all 0.2s;"
-                 onmouseover="this.style.background='rgba(251,191,36,0.1)';this.style.color='#fbbf24'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                 class="text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md p-1.5 transition">
+                <svg width="15" height="15" fill="none" class="stroke-current" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </a>
               <form method="POST" action="{{ route('students.destroy', $student) }}" onsubmit="return confirm('Delete {{ $displayName }}?')" style="display:inline;">
                 @csrf @method('DELETE')
                 <button type="submit" title="Delete"
-                  style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s;"
-                  onmouseover="this.style.background='rgba(248,113,113,0.1)';this.style.color='#f87171'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
-                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                  class="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md p-1.5 transition">
+                  <svg width="15" height="15" fill="none" class="stroke-current" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                 </button>
               </form>
             </div>
@@ -215,7 +216,7 @@
               </div>
               <div style="font-weight:600;font-size:15px;color:var(--text-secondary);">No students found</div>
               <div style="font-size:13px;">Try adjusting your filters or add a new student</div>
-              <a href="{{ route('students.create') }}" style="margin-top:8px;padding:9px 20px;background:linear-gradient(135deg,#D4501E,#e8622d);color:white;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">Add First Student</a>
+              <a href="{{ route('students.create') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors mt-2">Add First Student</a>
             </div>
           </td>
         </tr>

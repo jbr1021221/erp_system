@@ -2,6 +2,13 @@
 @section('page-title', 'Expenses')
 @section('breadcrumb', 'Finance · Expenses')
 
+@section('subnav')
+  <a href="{{ route('payments.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('payments.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Income / Fees</a>
+  <a href="{{ route('fee-structures.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('fee-structures.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Fee Structure</a>
+  <a href="{{ route('expenses.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('expenses.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Expenses</a>
+@endsection
+
+
 @section('content')
 
 {{-- Header --}}
@@ -10,9 +17,7 @@
     <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);">Expenses</h1>
     <p style="font-size:13px;color:var(--text-muted);margin-top:2px;">Manage and approve institutional spending</p>
   </div>
-  <a href="{{ route('expenses.create') }}"
-     style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--accent);border-radius:10px;font-size:13px;font-weight:600;color:white;text-decoration:none;transition:all 0.2s;"
-     onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">
+  <a href="{{ route('expenses.create') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add Expense
   </a>
@@ -41,13 +46,13 @@
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr style="background:var(--bg-surface-2);border-bottom:1px solid var(--border-color);">
-              <th class="text-left" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Details</th>
-              <th class="text-left" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Vendor</th>
-              <th class="text-right" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Amount</th>
-              <th class="text-left" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Date</th>
-              <th class="text-left" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Status</th>
-              <th class="text-right" style="padding:12px 16px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:500;">Actions</th>
+            <tr class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 font-medium border-b border-slate-200">
+              <th class="text-left px-4 py-3">Details</th>
+              <th class="text-left px-4 py-3">Vendor</th>
+              <th class="text-right px-4 py-3">Amount</th>
+              <th class="text-left px-4 py-3">Date</th>
+              <th class="text-left px-4 py-3">Status</th>
+              <th class="text-right px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -58,21 +63,20 @@
               $catColors = ['Utilities'=>'var(--accent-info)','Salaries'=>'var(--accent-green)','Supplies'=>'var(--accent-gold)','Maintenance'=>'var(--accent)','Transport'=>'var(--accent-info)'];
               $cc = $catColors[$expense->category ?? 'Utilities'] ?? 'var(--text-muted)';
             @endphp
-            <tr style="border-bottom:1px solid var(--border-color);border-left:3px solid {{ $sc }};transition:background 0.15s;"
-                onmouseover="this.style.background='var(--bg-surface-2)'" onmouseout="this.style.background='transparent'">
-              <td style="padding:14px 16px;">
+            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" style="border-left:3px solid {{ $sc }};">
+              <td class="px-4 py-3.5">
                 <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">{{ $expense->title ?? 'Expense' }}</div>
                 <span class="badge" style="background:transparent;border:1px solid {{ $cc }};color:{{ $cc }};">{{ $expense->category ?? 'General' }}</span>
               </td>
-              <td style="padding:14px 16px;font-size:13px;color:var(--text-secondary);">{{ $expense->vendor_name ?? '—' }}</td>
-              <td style="padding:14px 16px;text-align:right;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text-primary);">৳{{ number_format($expense->amount ?? 0) }}</td>
-              <td style="padding:14px 16px;font-size:12px;color:var(--text-muted);">{{ \Carbon\Carbon::parse($expense->expense_date ?? $expense->created_at)->format('M j, Y') }}<br><span style="font-size:10px;">{{ \Carbon\Carbon::parse($expense->expense_date ?? $expense->created_at)->format('h:i A') }}</span></td>
-              <td style="padding:14px 16px;">
+              <td class="px-4 py-3.5 text-slate-500 font-medium text-sm">{{ $expense->vendor_name ?? '—' }}</td>
+              <td class="px-4 py-3.5 text-right font-medium text-slate-900">৳{{ number_format($expense->amount ?? 0) }}</td>
+              <td class="px-4 py-3.5 text-slate-500 text-xs">{{ \Carbon\Carbon::parse($expense->expense_date ?? $expense->created_at)->format('M j, Y') }}<br><span style="font-size:10px;">{{ \Carbon\Carbon::parse($expense->expense_date ?? $expense->created_at)->format('h:i A') }}</span></td>
+              <td class="px-4 py-3.5">
                 <span class="badge {{ ($expense->status??'pending')==='approved' ? 'badge-green' : (($expense->status??'')==='rejected' ? 'badge-red' : 'badge-gold') }}">
                   {{ ucfirst($expense->status ?? 'pending') }}
                 </span>
               </td>
-              <td style="padding:14px 16px;">
+              <td class="px-4 py-3.5">
                 <div class="flex items-center justify-end gap-1">
                   @if(($expense->status ?? 'pending') === 'pending')
                     <form method="POST" action="{{ route('expenses.approve', $expense) }}" style="display:inline;">
@@ -81,13 +85,12 @@
                     </form>
                     <form method="POST" action="{{ route('expenses.approve', $expense) }}" style="display:inline;">
                       @csrf <input type="hidden" name="action" value="reject">
-                      <button type="submit" title="Reject" style="width:30px;height:30px;border-radius:8px;border:none;background:rgba(212,80,30,0.1);color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='var(--accent)';this.style.color='white'" onmouseout="this.style.background='rgba(212,80,30,0.1)';this.style.color='var(--accent)'"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                      <button type="submit" title="Reject" class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white" style="width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                     </form>
                   @endif
                   <a href="{{ route('expenses.show', $expense) }}" title="View"
-                     style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:var(--text-muted);transition:all 0.2s;"
-                     onmouseover="this.style.background='var(--bg-surface-2)';this.style.color='var(--text-primary)'" onmouseout="this.style.background='transparent';this.style.color='var(--text-muted)'">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                     class="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md p-1.5 transition">
+                    <svg width="15" height="15" fill="none" class="stroke-current" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   </a>
                 </div>
               </td>
@@ -111,8 +114,8 @@
     @if(($pendingExpensesCount ?? 0) > 0)
     <div class="p-4 rounded-xl" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);">
       <div class="flex items-start gap-3">
-        <div style="width:32px;height:32px;border-radius:8px;background:white;color:var(--accent-gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <div class="text-slate-300 flex-shrink-0">
+          <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         </div>
         <div>
           <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--accent-gold);">Pending Approvals</h3>
@@ -151,8 +154,4 @@
       </div>
     </div>
 
-  </div>
-
-</div>
-
-@endsection
+  @endsection

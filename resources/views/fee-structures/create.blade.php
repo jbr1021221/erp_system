@@ -2,6 +2,13 @@
 
 @section('title', 'Add New Fee - ERP System')
 
+@section('subnav')
+  <a href="{{ route('payments.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('payments.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Income / Fees</a>
+  <a href="{{ route('fee-structures.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('fee-structures.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Fee Structure</a>
+  <a href="{{ route('expenses.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('expenses.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Expenses</a>
+@endsection
+
+
 @section('header_title', 'Fee Management')
 
 @section('content')
@@ -14,7 +21,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
         <form action="{{ route('fee-structures.store') }}" method="POST" class="p-6 space-y-6">
             @csrf
             
@@ -75,6 +82,4 @@
                 </button>
             </div>
         </form>
-    </div>
-</div>
-@endsection
+    @endsection

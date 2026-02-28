@@ -76,7 +76,7 @@
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Email Address</label>
           <input type="email" name="email" value="{{ old('email') }}" required autofocus
             placeholder="admin@school.edu"
-            style="width:100%;height:50px;border:1.5px solid {{ $errors->has('email') ? 'var(--accent)' : 'var(--border-color)' }};border-radius:12px;padding:0 16px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;transition:border-color 0.2s,box-shadow 0.2s;font-family:'DM Sans',sans-serif;"
+            style="width:100%;height:50px;border:1.5px solid {{ $errors->has('email') ? 'var(--accent)' : 'var(--border-color)' }};border-radius:12px;padding:0 16px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;transition:border-color 0.2s,box-shadow 0.2s;font-family:'DM Sans',sans-serif;"
             onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(212,80,30,0.12)'"
             onblur="this.style.borderColor='var(--border-color)';this.style.boxShadow='none'">
           @error('email')<p style="font-size:11px;color:var(--accent);margin-top:4px;">{{ $message }}</p>@enderror
@@ -93,7 +93,7 @@
           <div class="relative">
             <input type="password" id="password-field" name="password" required
               placeholder="••••••••"
-              style="width:100%;height:50px;border:1.5px solid {{ $errors->has('password') ? 'var(--accent)' : 'var(--border-color)' }};border-radius:12px;padding:0 46px 0 16px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;transition:border-color 0.2s,box-shadow 0.2s;font-family:'DM Sans',sans-serif;"
+              style="width:100%;height:50px;border:1.5px solid {{ $errors->has('password') ? 'var(--accent)' : 'var(--border-color)' }};border-radius:12px;padding:0 46px 0 16px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;transition:border-color 0.2s,box-shadow 0.2s;font-family:'DM Sans',sans-serif;"
               onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(212,80,30,0.12)'"
               onblur="this.style.borderColor='var(--border-color)';this.style.boxShadow='none'">
             <button type="button" onclick="const f=document.getElementById('password-field');f.type=f.type==='password'?'text':'password'"
@@ -112,12 +112,7 @@
         </div>
 
         {{-- Submit --}}
-        <button type="submit"
-          style="width:100%;height:50px;background:var(--accent);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:background 0.2s,transform 0.1s,box-shadow 0.2s;letter-spacing:0.2px;"
-          onmouseover="this.style.background='var(--accent-hover)';this.style.boxShadow='0 4px 20px rgba(212,80,30,0.35)'"
-          onmouseout="this.style.background='var(--accent)';this.style.boxShadow='none'"
-          onmousedown="this.style.transform='scale(0.98)'"
-          onmouseup="this.style.transform='scale(1)'">
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 px-4 font-bold text-[15px] transition-colors mb-3">
           Sign In →
         </button>
       </form>

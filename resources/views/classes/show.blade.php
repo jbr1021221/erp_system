@@ -2,19 +2,24 @@
 
 @section('title', 'Class Details - ERP System')
 
+@section('subnav')
+  <a href="{{ route('students.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('students.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Students</a>
+  <a href="{{ route('teachers.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('teachers.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Teachers</a>
+  <a href="{{ route('classes.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('classes.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800'}}">Classes</a>
+@endsection
+
+
 @section('content')
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    
         <!-- Header -->
-        <div class="md:flex md:items-center md:justify-between mb-8">
-            <div class="flex-1 min-w-0">
-                <h2 class="text-xl font-semibold text-slate-800">
-                    {{ $class->name }}
-                </h2>
-                <p class="mt-1 text-sm text-slate-500">
-                    Code: {{ $class->code }} | Year: {{ $class->academic_year }}
+        <div class="flex flex-col md:flex-row md:items-start justify-between mb-8 pb-5 border-b border-slate-200 dark:border-slate-800">
+    <div>
+        <h1 class="text-xl font-semibold text-slate-800 dark:text-slate-100">{{ $class->name }}
+                </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Code: {{ $class->code }} | Year: {{ $class->academic_year }}
                 </p>
-            </div>
+    </div>
             <div class="mt-4 flex md:mt-0 md:ml-4">
                 <a href="{{ route('classes.index') }}" class="mr-3 inline-flex items-center px-4 py-2 rounded-xl shadow-sm text-sm font-medium transition-colors" style="border: 1px solid rgb(var(--border-primary)); background-color: rgb(var(--bg-elevated)); color: rgb(var(--text-secondary));" onmouseover="this.style.backgroundColor='rgb(var(--bg-secondary))';" onmouseout="this.style.backgroundColor='rgb(var(--bg-elevated));';">
                     Back to List
@@ -218,6 +223,4 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-@endsection
+    @endsection

@@ -69,6 +69,9 @@ body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+.dark body {
+  background-color: #0f172a !important; /* Force slate-900 */
+}
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Outfit', sans-serif;
 }
@@ -140,6 +143,10 @@ td a:hover, td button:hover {
   transition: box-shadow var(--transition);
 }
 .card:hover { box-shadow: var(--shadow-sm); }
+.dark .card {
+  background-color: #1e293b !important; /* slate-800 */
+  border: 1px solid #334155 !important;
+}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -242,11 +249,18 @@ td a:hover, td button:hover {
   box-shadow: var(--shadow-sm);
   display: inline-flex; align-items: center; justify-content: center;
 }
-.dark .btn-secondary {
-  border-color: #475569; /* slate-600 */
-}
 .btn-secondary:hover {
   background: var(--bg-base); /* slate-50 */
+}
+.dark .btn-secondary {
+  background-color: #334155 !important; /* bg-slate-700 */
+  color: #e2e8f0 !important; /* text-slate-200 */
+  border: 1px solid #475569 !important; /* border-slate-600 */
+  border-radius: 8px !important; /* rounded-lg */
+}
+.dark .btn-secondary:hover {
+  background-color: #475569 !important; /* hover:bg-slate-600 */
+  color: #e2e8f0 !important;
 }
 
 /* ── Inputs ── */
@@ -276,7 +290,12 @@ label {
   box-shadow: var(--shadow-sm);
 }
 .dark .input-premium, .dark select.input-premium, .dark textarea.input-premium {
-  border-color: #475569; /* slate-600 */
+  background-color: #1e293b !important; /* slate-800 */
+  border: 1px solid #334155 !important; 
+  color: #f1f5f9 !important; /* slate-100 */
+}
+.dark .input-premium::placeholder, .dark textarea.input-premium::placeholder {
+  color: #64748b !important; /* slate-400 */
 }
 
 .input-premium:focus, select.input-premium:focus, textarea.input-premium:focus {
@@ -284,6 +303,27 @@ label {
   border-color: #10b981; /* emerald-500 */
   /* Stripe-style 2px offset ring */
   box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px #10b981, var(--shadow-sm);
+}
+
+@layer components {
+  /* Enforce global dark mode form styling */
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="file"]):not(.border-transparent), 
+  .dark select, 
+  .dark textarea {
+    background-color: #1e293b !important; /* slate-800 */
+    border: 1px solid #334155 !important;
+    color: #f1f5f9 !important; /* slate-100 */
+  }
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="file"]):not(.border-transparent)::placeholder, 
+  .dark textarea::placeholder {
+    color: #64748b !important; /* slate-400 */
+  }
+  
+  /* Textarea specifics */
+  .dark textarea {
+    background-color: #1e293b !important;
+    resize: vertical;
+  }
 }
 
 /* ── Pagination ── */

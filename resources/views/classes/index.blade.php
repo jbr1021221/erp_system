@@ -2,6 +2,13 @@
 @section('page-title', 'Classes')
 @section('breadcrumb', 'Academics · Classes & Sections')
 
+@section('subnav')
+  <a href="{{ route('students.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('students.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Students</a>
+  <a href="{{ route('teachers.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('teachers.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Teachers</a>
+  <a href="{{ route('classes.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('classes.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800'}}">Classes</a>
+@endsection
+
+
 @section('content')
 
 {{-- Header --}}
@@ -10,9 +17,7 @@
     <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);">Academic Classes</h1>
     <p style="font-size:13px;color:var(--text-muted);margin-top:2px;">Manage classes, sections, and assigned teachers</p>
   </div>
-  <a href="{{ route('classes.create') }}"
-     style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--accent);border-radius:10px;font-size:13px;font-weight:600;color:white;text-decoration:none;transition:all 0.2s;"
-     onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">
+  <a href="{{ route('classes.create') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm">
     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Add Class
   </a>
@@ -86,7 +91,7 @@
     <div style="color:var(--text-muted);margin-bottom:12px;"><svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24" style="margin:0 auto;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
     <div style="font-weight:600;font-size:16px;color:var(--text-primary);">No classes found</div>
     <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">Create classes and sections to organize your students.</div>
-    <a href="{{ route('classes.create') }}" style="display:inline-block;margin-top:16px;padding:9px 20px;background:var(--accent);color:white;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">Add First Class</a>
+    <a href="{{ route('classes.create') }}" class="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">Add First Class</a>
   </div>
   @endforelse
 </div>

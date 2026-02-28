@@ -39,15 +39,13 @@ function initializeTheme() {
 }
 
 /**
- * Apply theme to document
+ * Apply theme to document — only uses .dark class to match Tailwind CSS
  * @param {string} theme - 'light' or 'dark'
  */
 function applyTheme(theme) {
     if (theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
         document.documentElement.classList.add('dark');
     } else {
-        document.documentElement.removeAttribute('data-theme');
         document.documentElement.classList.remove('dark');
     }
 }
@@ -56,18 +54,15 @@ function applyTheme(theme) {
  * Toggle between light and dark theme
  */
 window.toggleTheme = function() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    // Apply new theme
-    applyTheme(newTheme);
-    
+    const isDark = document.documentElement.classList.toggle('dark');
+    const newTheme = isDark ? 'dark' : 'light';
+
     // Save to localStorage
     localStorage.setItem('theme', newTheme);
-    
-    // Optional: Add a subtle animation effect
+
+    // Subtle transition
     document.body.style.transition = 'background-color 0.3s ease';
-    
+
     return newTheme;
 };
 

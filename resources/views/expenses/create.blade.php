@@ -1,6 +1,13 @@
 @extends('layouts.app')
 @section('page-title', 'Add Expense')
 @section('breadcrumb', 'Finance · Expenses · New')
+
+@section('subnav')
+  <a href="{{ route('payments.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('payments.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Income / Fees</a>
+  <a href="{{ route('fee-structures.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('fee-structures.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Fee Structure</a>
+  <a href="{{ route('expenses.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('expenses.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Expenses</a>
+@endsection
+
 @section('content')
 
 <div class="flex items-center justify-between mb-6">
@@ -44,7 +51,7 @@
           <h2 style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--text-primary);">Description</h2>
         </div>
         <textarea name="description" rows="4" placeholder="Detailed explanation for this expense..." required
-          style="width:100%;padding:14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-base);color:var(--text-primary);outline:none;resize:vertical;font-family:'DM Sans',sans-serif;"
+          style="width:100%;padding:14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;resize:vertical;font-family:'DM Sans',sans-serif;"
           onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">{{ old('description') }}</textarea>
       </div>
 
@@ -80,7 +87,7 @@
             ['name'=>'Maintenance','icon'=>'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z','color'=>'var(--accent)'],
           ] as $cat)
           <div class="cat-btn" data-val="{{ $cat['name'] }}"
-               style="padding:16px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid {{ old('category', 'Utilities') == $cat['name'] ? 'var(--accent)' : 'var(--border-color)' }};background:var(--bg-base);transition:all 0.2s;"
+               style="padding:16px;border-radius:12px;text-align:center;cursor:pointer;border:2px solid {{ old('category', 'Utilities') == $cat['name'] ? 'var(--accent)' : 'var(--border-color)' }};background:var(--bg-surface);transition:all 0.2s;"
                onclick="document.getElementById('categoryInput').value='{{ $cat['name'] }}';document.querySelectorAll('.cat-btn').forEach(b=>b.style.borderColor='var(--border-color)');this.style.borderColor='var(--accent)'">
             <svg width="24" height="24" fill="none" stroke="{{ $cat['color'] }}" stroke-width="1.8" viewBox="0 0 24 24" style="margin:0 auto 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $cat['icon'] }}"/></svg>
             <div style="font-size:12px;font-weight:600;color:var(--text-primary);">{{ $cat['name'] }}</div>
@@ -91,9 +98,7 @@
 
       {{-- Action Buttons --}}
       <div class="card p-5 animate-in delay-2">
-        <button type="submit" name="status" value="pending"
-          style="width:100%;height:50px;background:var(--accent);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;margin-bottom:10px;"
-          onmouseover="this.style.background='var(--accent-hover)'" onmouseout="this.style.background='var(--accent)'">
+        <button type="submit" name="status" value="pending" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 px-4 font-bold text-[15px] transition-colors mb-3">
           Submit for Approval
         </button>
         <button type="submit" name="status" value="draft"

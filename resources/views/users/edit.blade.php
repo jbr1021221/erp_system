@@ -2,18 +2,23 @@
 
 @section('title', 'Edit User - ERP System')
 
+@section('subnav')
+  <a href="{{ route('users.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('users.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Users</a>
+  <a href="{{ route('roles.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('roles.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Roles & Perms</a>
+  <a href="{{ route('reports.index') }}" class="text-sm px-4 h-[44px] flex items-center border-b-2 {{ request()->routeIs('reports.*') ? 'border-emerald-600 text-emerald-600 font-medium' : 'border-transparent text-slate-500 hover:text-slate-800' }}">Reports</a>
+@endsection
+
+
 @section('content')
-<div class="py-6">
+
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="md:flex md:items-center md:justify-between mb-8">
-            <div class="flex-1 min-w-0">
-                <h2 class="text-xl font-semibold text-slate-800">
-                    Edit User: {{ $user->name }}
-                </h2>
-                <p class="mt-1 text-sm text-slate-500">
-                    Update user detailed and role information.
+        <div class="flex flex-col md:flex-row md:items-start justify-between mb-8 pb-5 border-b border-slate-200 dark:border-slate-800">
+    <div>
+        <h1 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Edit User: {{ $user->name }}
+                </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Update user detailed and role information.
                 </p>
-            </div>
+    </div>
             <div class="mt-4 flex md:mt-0 md:ml-4">
                 <a href="{{ route('users.index') }}" class="inline-flex items-center px-4 py-2 border border-slate-300 rounded-xl shadow-sm text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
                     Back to List
@@ -124,6 +129,4 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
-@endsection
+    @endsection

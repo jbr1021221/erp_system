@@ -1,6 +1,13 @@
 @extends('layouts.app')
 @section('page-title', 'Dashboard')
-@section('breadcrumb', 'Overview · Today')
+@section('breadcrumb', 'EduERP / Dashboard')
+
+@section('subnav')
+  <a href="#" class="text-sm px-4 h-[44px] flex items-center border-b-2 border-emerald-600 text-emerald-600 font-medium">Overview</a>
+  <a href="#" class="text-sm px-4 h-[44px] flex items-center border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">Revenue</a>
+  <a href="#" class="text-sm px-4 h-[44px] flex items-center border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">Students</a>
+  <a href="#" class="text-sm px-4 h-[44px] flex items-center border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">Activity</a>
+@endsection
 
 @push('styles')
 <style>
@@ -15,39 +22,8 @@
     background: var(--bg-base);
   }
 
-  /* ── HERO BANNER ── */
-  .hero-banner {
-    position: relative; overflow: hidden;
-    border-radius: 8px;
-    padding: 24px 32px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-  }
-  .hero-date {
-    font-size: 13px; font-weight: 500;
-    color: var(--text-muted);
-  }
-  .hero-greeting {
-    font-family: 'Outfit', sans-serif; font-weight: 700;
-    font-size: 24px; color: var(--text-primary); margin-top: 4px;
-  }
-  .hero-sub { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
-  .hero-btn-ghost {
-    padding: 8px 16px; border-radius: 6px;
-    background: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary); font-size: 13px; font-weight: 500;
-    text-decoration: none; transition: all 0.2s; white-space: nowrap;
-  }
-  .hero-btn-ghost:hover { background: var(--bg-surface-2); }
-  .hero-btn-solid {
-    padding: 8px 16px; border-radius: 6px;
-    background: var(--accent); color: #ffffff;
-    font-size: 13px; font-weight: 500;
-    text-decoration: none; white-space: nowrap;
-    transition: all 0.2s;
-  }
-  .hero-btn-solid:hover { background: var(--accent-hover); box-shadow: var(--shadow-sm); }
+  /* ── DASHBOARD STYLES ── */
+
 
   /* ── STAT CARDS ── */
   .stat-card {
@@ -74,20 +50,6 @@
   }
   .stat-value.lg { font-size: 28px; }
   .stat-value.md { font-size: 24px; }
-  .stat-icon {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    opacity: 0.4;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .stat-icon svg {
-    width: 20px;
-    height: 20px;
-    stroke: var(--accent);
-  }
 
   /* DARK MODE explicit text fix */
   .dark .stat-value { color: #F5F0E8 !important; }
@@ -243,21 +205,22 @@
 @section('content')
 <div class="dash-bg"></div>
 
-{{-- ═══════════════════════════════════════════════
-     HERO BANNER
-═══════════════════════════════════════════════ --}}
-<div class="hero-banner au d1 mb-6">
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-6 mb-8 au d1">
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative z-10">
     <div>
-      <div class="hero-date">{{ now()->format('l, F j · Y') }}</div>
-      <div class="hero-greeting">
+      <div class="text-[13px] font-medium text-slate-500 dark:text-slate-400">{{ now()->format('l, F j · Y') }}</div>
+      <div class="font-bold text-2xl text-slate-800 dark:text-slate-100 mt-1" style="font-family: 'Outfit', sans-serif;">
         {{ now()->hour < 12 ? '☀️ Good Morning' : (now()->hour < 17 ? '🌤 Good Afternoon' : '🌙 Good Evening') }}, {{ auth()->user()->name ?? 'Admin' }}
       </div>
-      <div class="hero-sub">Academic Year {{ date('Y') }}–{{ date('Y')+1 }} &nbsp;·&nbsp; EduERP Admin Suite</div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">Academic Year {{ date('Y') }}–{{ date('Y')+1 }} &nbsp;·&nbsp; EduERP Admin Suite</div>
     </div>
     <div class="flex gap-3 flex-shrink-0">
-      <a href="{{ route('students.create') }}" class="hero-btn-ghost">+ Add Student</a>
-      <a href="{{ route('payments.create') }}" class="hero-btn-solid">💳 Collect Fee</a>
+      <a href="{{ route('students.create') }}" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+        + Add Student
+      </a>
+      <a href="{{ route('payments.create') }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition">
+        💳 Collect Fee
+      </a>
     </div>
   </div>
 </div>
@@ -274,8 +237,8 @@
         <div class="stat-label">Total Students</div>
         <div class="stat-value lg" data-countup data-target="{{ $totalStudents ?? 0 }}">{{ $totalStudents ?? 0 }}</div>
       </div>
-      <div class="stat-icon">
-        <svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <div class="absolute top-6 right-6 text-slate-300 dark:text-slate-600">
+        <svg class="w-5 h-5 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
       </div>
     </div>
     <div class="flex items-center gap-2 mt-2">
@@ -291,8 +254,8 @@
         <div class="stat-label">Total Revenue</div>
         <div class="stat-value md">৳<span data-countup data-target="{{ $totalRevenue ?? 0 }}">{{ number_format($totalRevenue ?? 0) }}</span></div>
       </div>
-      <div class="stat-icon">
-        <svg fill="none" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <div class="absolute top-6 right-6 text-slate-300 dark:text-slate-600">
+        <svg class="w-5 h-5 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#2C6E49;font-weight:600;">
@@ -308,8 +271,8 @@
         <div class="stat-label">Today's Collection</div>
         <div class="stat-value lg">৳<span data-countup data-target="{{ $todayCollection ?? 0 }}">{{ number_format($todayCollection ?? 0) }}</span></div>
       </div>
-      <div class="stat-icon">
-        <svg fill="none" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L2 7h20z"/></svg>
+      <div class="absolute top-6 right-6 text-slate-300 dark:text-slate-600">
+        <svg class="w-5 h-5 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L2 7h20z"/></svg>
       </div>
     </div>
     <div style="font-size:12px;color:var(--text-muted);" class="card-muted">Collected today from payments</div>
@@ -322,8 +285,8 @@
         <div class="stat-label">Outstanding Fees</div>
         <div class="stat-value md">৳<span data-countup data-target="{{ $outstandingFees ?? 0 }}">{{ number_format($outstandingFees ?? 0) }}</span></div>
       </div>
-      <div class="stat-icon">
-        <svg fill="none" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="absolute top-6 right-6 text-slate-300 dark:text-slate-600">
+        <svg class="w-5 h-5 stroke-current" fill="none" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       </div>
     </div>
     <a href="{{ route('payments.index', ['status' => 'pending']) }}" style="font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;">
@@ -346,8 +309,8 @@
   @endphp
   @foreach($insights as $i => $ins)
   <div class="insight-card au d{{ $i+1 }}">
-    <div class="insight-icon" style="background:{{ $ins['bg'] }};">
-      <svg width="20" height="20" fill="none" stroke="{{ $ins['color'] }}" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $ins['icon'] }}"/></svg>
+    <div class="insight-icon">
+      <svg class="w-5 h-5 text-slate-300 stroke-current" fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $ins['icon'] }}"/></svg>
     </div>
     <div>
       <div class="insight-label">{{ $ins['label'] }}</div>
@@ -360,7 +323,7 @@
 {{-- ═══════════════════════════════════════════════
      REVENUE CHART  +  BY CLASS
 ═══════════════════════════════════════════════ --}}
-<div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-5">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-5">
 
   {{-- Chart --}}
   <div class="chart-card lg:col-span-3 au d5">
@@ -373,7 +336,7 @@
         <div class="chart-period-pill">
           @foreach(['3M' => 3, '6M' => 6, '1Y' => 12] as $label => $months)
             <button onclick="loadChart({{ $months }}, this)"
-              class="period-btn {{ $months === 6 ? 'active' : '' }}">{{ $label }}</button>
+              class="period-btn {{ $months === 6 ? 'active' : ''}}">{{ $label }}</button>
           @endforeach
         </div>
       </div>
@@ -399,7 +362,7 @@
   </div>
 
   {{-- By Class --}}
-  <div class="chart-card lg:col-span-2 au d5">
+  <div class="chart-card lg:col-span-1 au d5">
     <div class="p-6">
       <div class="flex items-center justify-between mb-4">
         <div class="card-title">By Class</div>
@@ -542,10 +505,10 @@
 {{-- ═══════════════════════════════════════════════
      RECENT ADMISSIONS  +  RECENT PAYMENTS
 ═══════════════════════════════════════════════ --}}
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 au d7">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 au d7">
 
   {{-- Recent Admissions --}}
-  <div class="recent-card overflow-hidden">
+  <div class="recent-card overflow-hidden lg:col-span-2">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border-color);">
       <div class="card-title">Recent Admissions</div>
       <a href="{{ route('students.index') }}"
@@ -600,7 +563,7 @@
   </div>
 
   {{-- Recent Payments --}}
-  <div class="recent-card overflow-hidden">
+  <div class="recent-card overflow-hidden lg:col-span-2">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border-color);">
       <div class="card-title">Recent Payments</div>
       <a href="{{ route('payments.index') }}"
