@@ -49,8 +49,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('students/{student}/admission-preview', [StudentController::class, 'admissionPreview'])->name('students.admission-preview');
     Route::get('students/{student}/admission-complete', [StudentController::class, 'admissionComplete'])->name('students.admission-complete');
     
-    // Teachers
+    // Teachers (routes active — sidebar link hidden until old data migrated)
     Route::resource('teachers', TeacherController::class);
+
     
     // Payments
     Route::resource('payments', PaymentController::class);
@@ -64,12 +65,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('classes/{class}/sections', [ClassController::class, 'storeSection'])->name('classes.sections.store');
     Route::delete('classes/{class}/sections/{section}', [ClassController::class, 'destroySection'])->name('classes.sections.destroy');
     
-    // Expenses
+    // Expenses (routes active — sidebar link hidden until old data migrated)
     Route::resource('expenses', ExpenseController::class);
     Route::post('expenses/{expense}/approve', [ExpenseController::class, 'approve'])->name('expenses.approve');
+
     
-    // Accounts
+    // Accounts (routes active — sidebar link hidden, controller is stub)
     Route::resource('accounts', AccountController::class);
+
     
     // Users
     Route::resource('users', UserController::class);
@@ -77,7 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Roles & Permissions
     Route::resource('roles', RoleController::class);
     
-    // Reports
+    // Reports (routes active — sidebar link hidden until old data migrated)
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/students', [ReportController::class, 'students'])->name('reports.students');
     Route::get('reports/payments', [ReportController::class, 'payments'])->name('reports.payments');
@@ -85,9 +88,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/financial', [ReportController::class, 'financial'])->name('reports.financial');
     Route::get('reports/fees', [ReportController::class, 'fees'])->name('reports.fees');
 
-    // Settings
+
+    // Settings (routes active — sidebar link hidden until old data migrated)
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+
 });
 
 Route::middleware('auth')->group(function () {

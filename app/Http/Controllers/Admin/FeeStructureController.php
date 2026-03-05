@@ -20,11 +20,11 @@ class FeeStructureController extends Controller implements HasMiddleware
             new Middleware('permission:fee-structure-delete', only: ['destroy']),
         ];
     }
-
     public function index()
     {
-        $classes = Classes::with('feeStructures')->get();
-        return view('fee-structures.index', compact('classes'));
+        $feeStructures = FeeStructure::with('class')->orderBy('class_id')->get();
+        $classes = Classes::all();
+        return view('fee-structures.index', compact('feeStructures', 'classes'));
     }
 
     public function create()

@@ -52,11 +52,13 @@
                             </x-slot>
 
                             <x-slot name="content">
+                                {{-- COMMENTED OUT — Expenses link: route removed, implement later
                                 @can('expense-list')
                                 <x-dropdown-link :href="route('expenses.index')">
                                     {{ __('Expenses') }}
                                 </x-dropdown-link>
                                 @endcan
+                                --}}
                                 
                                 @can('user-list')
                                 <x-dropdown-link :href="route('users.index')">

@@ -75,14 +75,12 @@
           <svg class="{{ request()->routeIs('students.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           Students
         </a>
-        <a href="{{ route('teachers.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mt-1 {{ request()->routeIs('teachers.*') ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 relative before:content-[\'\'] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-600 before:rounded-full' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white' }}">
-          <svg class="{{ request()->routeIs('teachers.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          Teachers
-        </a>
+        {{-- COMMENTED OUT — Classes sidebar link: not wired to sidebar yet
         <a href="{{ route('classes.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mt-1 {{ request()->routeIs('classes.*') ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 relative before:content-[\'\'] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-600 before:rounded-full' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white' }}">
           <svg class="{{ request()->routeIs('classes.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
           Classes
         </a>
+        --}}
       </div>
 
       {{-- FINANCE --}}
@@ -96,14 +94,18 @@
           <svg class="{{ request()->routeIs('fee-structures.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
           Fee Structure
         </a>
+        <!--
         <a href="{{ route('expenses.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mt-1 {{ request()->routeIs('expenses.*') ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 relative before:content-[\'\'] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-600 before:rounded-full' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white' }}">
           <svg class="{{ request()->routeIs('expenses.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M2 15h10"></path><path d="M9 18l3-3-3-3"></path></svg>
           Expenses
         </a>
+        -->
+        <!--
         <a href="{{ route('accounts.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mt-1 {{ request()->routeIs('accounts.*') ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 relative before:content-[\'\'] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-600 before:rounded-full' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white' }}">
           <svg class="{{ request()->routeIs('accounts.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path></svg>
           Accounts
         </a>
+        -->
       </div>
 
       {{-- SYSTEM --}}
@@ -117,14 +119,17 @@
           <svg class="{{ request()->routeIs('roles.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           Roles & Perms
         </a>
-        <a href="{{ route('reports.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mt-1 {{ request()->routeIs('reports.*') ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 relative before:content-[\'\'] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-600 before:rounded-full' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white' }}">
-          <svg class="{{ request()->routeIs('reports.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 3v18h18"></path><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path></svg>
+        {{-- COMMENTED OUT — Reports sidebar link: route removed, implement later
+        <a href="{{ route('reports.index') }}">
           Reports
         </a>
-        <a href="{{ route('settings.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mt-1 {{ request()->routeIs('settings.*') ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 relative before:content-[\'\'] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-600 before:rounded-full' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white' }}">
-          <svg class="{{ request()->routeIs('settings.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        --}}
+
+        {{-- COMMENTED OUT — Settings sidebar link: route removed, implement later
+        <a href="{{ route('settings.index') }}">
           Settings
         </a>
+        --}}
       </div>
       
     </div>
@@ -184,8 +189,10 @@
         <div x-show="quickOpen" x-transition class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 shadow-xl border border-slate-100 dark:border-slate-700 rounded-xl py-1.5 z-50" style="display: none;">
           <a href="{{ route('students.create') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-emerald-600 dark:hover:text-emerald-400">Add Student</a>
           <a href="{{ route('payments.create') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-emerald-600 dark:hover:text-emerald-400">Collect Fee</a>
+          {{-- COMMENTED OUT — Expense quick action: route removed, implement later
           <div class="h-px bg-slate-100 dark:bg-slate-700/50 my-1.5"></div>
-          <a href="{{ route('expenses.create') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-emerald-600 dark:hover:text-emerald-400">Record Expense</a>
+          <a href="{{ route('expenses.create') }}">Record Expense</a>
+          --}}
         </div>
       </div>
 
@@ -226,10 +233,11 @@
              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
              Profile Settings
           </a>
-          <a href="{{ route('settings.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-emerald-600 dark:hover:text-emerald-400">
-             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          {{-- COMMENTED OUT — System Settings link: route removed, implement later
+          <a href="{{ route('settings.index') }}">
              System Settings
           </a>
+          --}}
           <div class="h-px bg-slate-100 dark:bg-slate-700/50 my-1.5"></div>
           <form method="POST" action="{{ route('logout') }}">
             @csrf
