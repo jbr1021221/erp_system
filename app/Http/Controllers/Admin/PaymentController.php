@@ -71,26 +71,60 @@ class PaymentController extends Controller implements HasMiddleware
         return view('payments.student', ['studentId' => $studentId]);
     }
 
+// ── Add these two use statements at the top of the file ──────────────
+    // use App\Models\Classes;
+    // use App\Models\Section;
+
     /**
      * Show the form for creating a new resource.
+     * Passes pre-built JSON-safe arrays for the cascading class → section → student dropdowns.
      */
     public function create(Request $request)
     {
-        $student = null;
-        $payableFees = [];
-        
-        if ($request->has('student_id')) {
-            $student = Student::with(['class.feeStructures', 'feeAssignments'])->find($request->student_id);
-            
-            if ($student) {
-                $payableFees = $this->calculatePayableFees($student);
-            }
-        }
-        
-        $students = Student::active()->get();
-        return view('payments.create', compact('student', 'students', 'payableFees'));
+        $classes  = \App\Models\Classes::orderBy('name')->get();
+        $sections = \App\Models\Section::orderBy('name')->get();
+        $students = Student::with(['class', 'section'])
+                        ->active()
+                        ->orderBy('first_name')
+                        ->get();
+
+        $studentsJson = $students->map(fn($s) => [
+            'id'           => $s->id,
+            'name'         => trim($s->first_name . ' ' . $s->last_name),
+            'student_id'   => $s->student_id,
+            'class_id'     => $s->class_id,
+            'class_name'   => $s->class?->name ?? '',
+            'section_id'   => $s->section_id,
+            'section_name' => $s->section?->name ?? '',
+        ])->values()->toArray();
+
+        $sectionsJson = $sections->map(fn($s) => [
+            'id'       => $s->id,
+            'name'     => $s->name,
+            'class_id' => $s->class_id,
+        ])->values()->toArray();
+
+        return view('payments.create', compact('classes', 'sections', 'students', 'studentsJson', 'sectionsJson'));
     }
 
+    /**
+     * AJAX — return payable fees for a student.
+     * Route: GET /payments/payable-fees?student_id=X
+     * Add to routes/web.php:
+     *   Route::get('payments/payable-fees', [PaymentController::class, 'payableFees'])->name('payments.payable-fees');
+     * (Must be ABOVE the resource route)
+     */
+    public function payableFees(Request $request)
+    {
+        $student = Student::with(['class.feeStructures', 'feeAssignments', 'payments'])
+                        ->find($request->student_id);
+
+        if (!$student) {
+            return response()->json([]);
+        }
+
+        return response()->json($this->calculatePayableFees($student));
+    }
     /**
      * Store a newly created resource in storage.
      */

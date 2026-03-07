@@ -54,11 +54,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     
     // Payments
+    Route::get('payments/payable-fees', [PaymentController::class, 'payableFees'])->name('payments.payable-fees');
     Route::resource('payments', PaymentController::class);
     Route::get('payments/receipt/{receipt_number}', [PaymentController::class, 'receipt'])->name('payments.receipt');
     Route::resource('fee-structures', FeeStructureController::class);
     Route::get('payments/student/{student}', [PaymentController::class, 'studentPayments'])->name('payments.student');
-    
+    // Route::resource('payments', PaymentController::class);
     // Classes
     Route::resource('classes', ClassController::class);
     Route::get('classes/{class}/sections', [ClassController::class, 'getSections']);
