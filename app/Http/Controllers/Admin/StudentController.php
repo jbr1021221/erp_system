@@ -98,39 +98,59 @@ class StudentController extends Controller implements HasMiddleware
     {
         $student->load(['class.feeStructures', 'section', 'payments' => fn($q) => $q->latest()]);
 
-        $academicYear  = date('Y');
-        $feeStructures = $student->class->feeStructures ?? collect();
+      $academicYear  = date('Y');
+$feeStructures = $student->class->feeStructures ?? collect();
+$ledger = [];
 
-        $ledger = [];
-        foreach ($feeStructures as $fee) {
-            $status = [];
-            $months = match ($fee->frequency) {
-                'monthly'     => range(1, 12),
-                'quarterly'   => [3, 6, 9, 12],
-                'half_yearly' => [6, 12],
-                default       => null,
-            };
+foreach ($feeStructures as $fee) {
+    $status = [];
+    $months = match ($fee->frequency) {
+        'monthly'     => range(1, 12),
+        'quarterly'   => [3, 6, 9, 12],
+        'half_yearly' => [6, 12],
+        default       => null,
+    };
 
-            if ($months) {
-                foreach ($months as $m) {
-                    $paid = $student->payments
-                        ->where('fee_structure_id', $fee->id)
-                        ->where('billing_month', $m)
-                        ->where('billing_year', $academicYear)
-                        ->sum('amount');
-                    $status[$m] = $paid >= $fee->amount ? 'paid' : ($paid > 0 ? 'partial' : 'due');
-                }
+    // Get payments for this fee by fee_structure_id OR fee_type name
+    $feePayments = $student->payments->filter(function($p) use ($fee) {
+        return $p->fee_structure_id == $fee->id
+            || strtolower(trim($p->fee_type)) == strtolower(trim($fee->fee_type));
+    });
+
+    if ($months) {
+        // New payments with billing_month set
+        $newPayments = $feePayments->whereNotNull('billing_month');
+        // Migrated payments without billing_month
+        $migratedPayments = $feePayments->whereNull('billing_month');
+        
+        // Count how many months are covered by migrated payments
+        $migratedTotal = $migratedPayments->sum('amount');
+        $migratedMonthsCovered = $migratedTotal > 0 
+            ? (int) floor($migratedTotal / $fee->amount)
+            : 0;
+
+        foreach ($months as $idx => $m) {
+            // Check new-style payment first
+            $paid = $newPayments
+                ->where('billing_month', $m)
+                ->sum('amount');
+
+            if ($paid > 0) {
+                $status[$m] = $paid >= $fee->amount ? 'paid' : 'partial';
+            } elseif ($idx < $migratedMonthsCovered) {
+                // Mark early months as paid from migrated data
+                $status[$m] = 'paid';
             } else {
-                $paid = $student->payments
-                    ->where('fee_structure_id', $fee->id)
-                    ->where('billing_year', $academicYear)
-                    ->sum('amount');
-                $status['one_time'] = $paid >= $fee->amount ? 'paid' : ($paid > 0 ? 'partial' : 'due');
+                $status[$m] = 'due';
             }
-
-            $ledger[] = ['fee' => $fee, 'status' => $status];
         }
+    } else {
+        $paid = $feePayments->sum('amount');
+        $status['one_time'] = $paid >= $fee->amount ? 'paid' : ($paid > 0 ? 'partial' : 'due');
+    }
 
+    $ledger[] = ['fee' => $fee, 'status' => $status];
+}
         return view('students.show', compact('student', 'ledger', 'academicYear'));
     }
 

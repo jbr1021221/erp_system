@@ -99,7 +99,7 @@
           <th class="text-left px-4 py-3">Class</th>
           <th class="text-right px-4 py-3">Amount Due</th>
           <th class="text-right px-4 py-3">Paid</th>
-          <th class="text-right px-4 py-3">Balance</th>
+          
           <th class="text-left px-4 py-3">Date</th>
           <th class="text-left px-4 py-3">Status</th>
           <th class="text-right px-4 py-3">Actions</th>
@@ -108,10 +108,10 @@
       <tbody>
         @forelse($payments ?? [] as $payment)
         @php
-          $pname = $payment->student->name ?? 'Unknown';
+          $pname = $payment->student->full_name ?? 'Unknown';
           $pi = implode('', array_map(fn($p)=>strtoupper($p[0]), array_slice(explode(' ',$pname),0,2)));
           $statusColor = ['paid'=>'var(--accent-green)','partial'=>'var(--accent-gold)','overdue'=>'var(--accent)'][$payment->status ?? 'paid'] ?? 'var(--text-muted)';
-          $balance = ($payment->amount_due ?? 0) - ($payment->amount_paid ?? 0);
+          $balance = 0;
         @endphp
         <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" style="border-left:3px solid {{ $statusColor }};">
           <td class="px-4 py-3.5">
@@ -123,10 +123,10 @@
               </div>
             </div>
           </td>
-          <td class="px-4 py-3.5 text-slate-500 font-medium text-sm">{{ $payment->student->schoolClass->name ?? '—' }}</td>
-          <td class="px-4 py-3.5 text-right font-medium text-slate-900">৳{{ number_format($payment->amount_due ?? 0) }}</td>
-          <td class="px-4 py-3.5 text-right font-medium text-emerald-600">৳{{ number_format($payment->amount_paid ?? 0) }}</td>
-          <td class="px-4 py-3.5 text-right font-medium" style="color:{{ $balance > 0 ? 'var(--accent)' : 'var(--text-muted)' }};">৳{{ number_format($balance) }}</td>
+          <td class="px-4 py-3.5 text-slate-500 font-medium text-sm">{{ $payment->student->class->name ?? '—' }}</td>
+          <td class="px-4 py-3.5 text-right font-medium text-slate-900">৳{{ number_format($payment->amount ?? 0) }}</td>
+          <td class="px-4 py-3.5 text-right font-medium text-emerald-600">৳{{ number_format($payment->amount ?? 0) }}</td>
+          
           <td class="px-4 py-3.5 text-slate-500 text-xs">{{ \Carbon\Carbon::parse($payment->created_at)->format('M j, Y') }}</td>
           <td class="px-4 py-3.5">
             <span class="badge {{ $payment->status === 'paid' ? 'badge-green' : ($payment->status === 'partial' ? 'badge-gold' : 'badge-red') }}">
@@ -135,7 +135,7 @@
           </td>
           <td class="px-4 py-3.5">
             <div class="flex items-center justify-end gap-1">
-              <a href="{{ route('payments.show', $payment) }}" title="Receipt"
+             <a href="{{ route('payments.receipt', ['receipt_number' => $payment->receipt_number]) }}" title="Receipt"
                  class="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md p-1.5 transition">
                 <svg width="15" height="15" fill="none" class="stroke-current" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               </a>

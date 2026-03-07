@@ -25,42 +25,45 @@ class PaymentController extends Controller implements HasMiddleware
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
-        $query = Payment::with('student');
+   public function index(Request $request)
+{
+    $query = Payment::with('student');
 
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('receipt_number', 'like', "%{$search}%")
-                  ->orWhereHas('student', function($sq) use ($search) {
-                      $sq->where('first_name', 'like', "%{$search}%")
-                         ->orWhere('last_name', 'like', "%{$search}%")
-                         ->orWhere('student_id', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        if ($request->filled('start_date')) {
-            $query->whereDate('payment_date', '>=', $request->start_date);
-        }
-
-        if ($request->filled('end_date')) {
-            $query->whereDate('payment_date', '<=', $request->end_date);
-        }
-
-        if ($request->filled('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
-        }
-
-        $payments = $query->latest()->paginate(15);
-        $totalAmount = $query->sum('amount'); // Calculate total for the current filtered set if needed, but pagination makes this tricky. 
-        // Better to get total of filtered query before pagination if needed, but for now simple paginate is fine.
-        
-        // Let's actually pass a total stats of the current view if convenient, but let's stick to standard pagination primarily.
-
-        return view('payments.index', compact('payments'));
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('receipt_number', 'like', "%{$search}%")
+              ->orWhereHas('student', function($sq) use ($search) {
+                  $sq->where('first_name', 'like', "%{$search}%")
+                     ->orWhere('last_name', 'like', "%{$search}%")
+                     ->orWhere('student_id', 'like', "%{$search}%");
+              });
+        });
     }
+
+    if ($request->filled('start_date')) {
+        $query->whereDate('payment_date', '>=', $request->start_date);
+    }
+    if ($request->filled('end_date')) {
+        $query->whereDate('payment_date', '<=', $request->end_date);
+    }
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    $payments = $query->latest()->paginate(15);
+
+    // Summary cards
+    $totalCollected = Payment::where('status', 'completed')->sum('amount');
+    $monthCollected = Payment::where('status', 'completed')
+        ->whereMonth('payment_date', now()->month)
+        ->whereYear('payment_date', now()->year)
+        ->sum('amount');
+    $totalOutstanding = Payment::where('status', 'partial')->sum('amount');
+    $partialCount = Payment::where('status', 'partial')->count();
+
+    return view('payments.index', compact('payments', 'totalCollected', 'monthCollected', 'totalOutstanding', 'partialCount'));
+}
 
     public function studentPayments($studentId)
     {

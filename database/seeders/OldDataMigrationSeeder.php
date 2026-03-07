@@ -15,249 +15,355 @@ use App\Models\StudentFeeAssignment;
 use App\Models\Payment;
 
 /**
- * OldDataMigrationSeeder
+ * OldDataMigrationSeeder  — Al-Akhirah Academy
+ * ───────────────────────────────────────────────────────────────────────────
+ * Run:  php artisan db:seed --class=OldDataMigrationSeeder
  *
- * Migrates data from the OLD project (classrooms/fees JSON / flat payments)
- * to the NEW project schema (fee_structures table / normalized payments).
+ * Safe to run multiple times (idempotent).
  *
- * KEY DIFFERENCES FIXED vs. original seeder
- * ─────────────────────────────────────────
- * 1. NEW selected_fees uses key "name" not "fee_name"  → handled with null-coalescing
- * 2. NEW selected_fees has "type" field (One Time / Monthly / Half-Yearly …)
- *    → $FREQ_MAP now includes "One Time" → "one_time"
- * 3. NEW discounts field is a KEYED OBJECT  {"FeeName":{"amount":X,"permanent":Y}}
- *    OLD discounts field is an ARRAY        [{"fee_name":"X","discount_type":"fixed","value":Y}]
- *    → step6 auto-detects format via array_is_list()
- * 4. NEW payments fee_details items use "name" key (not "fee_name")
- *    and monthly fee names include " - Month, YY" suffix  (e.g. "Monthly Tuition Fee - January, 26")
- *    → step7 strips the suffix before looking up feeMap / writing fee_type
- * 5. NEW payments have no "billing_month" / "billing_year" columns
- *    → removed those columns; month info comes from the fee_details suffix
- * 6. Payment.payment_method enum values are lowercase in new schema
- *    → paymentMethodMap normalises "Cash" → "cash", "Bank Transfer" → "bank_transfer" etc.
- * 7. FeeStructure has no "billing_month" column – Payment stores fee_type (string)
- *    → step7 writes fee_type directly from the fee detail name (stripped of month suffix)
- *
- * HOW TO USE:
- *   php artisan db:seed --class=OldDataMigrationSeeder
+ * What this seeder does:
+ *  0. Wipes students, payments, student_fee_assignments (keeps classes/sections/fee_structures)
+ *  1. Seeds users
+ *  2. Builds classMap  : old class_id (1-4)  → new classes.id
+ *  3. Builds sectionMap: "oldClassId:Name"   → new sections.id
+ *  4. Builds feeMap    : "newClassId:feeName"→ new fee_structures.id
+ *  5. Migrates students with correct student_id format (26 + class_code + zero-padded old id)
+ *  6. Migrates student_fee_assignments with discounts
+ *  7. Migrates payments — splits bundled fee_details into one Payment row per fee,
+ *     and correctly sets fee_structure_id, billing_month, billing_year on every row.
  */
 class OldDataMigrationSeeder extends Seeder
 {
-    // ─────────────────────────────────────────────────────────────────────
-    // OLD PROJECT DATA
-    // ─────────────────────────────────────────────────────────────────────
-
+    // ──────────────────────────────────────────────────────────────────────
+    // OLD PROJECT — USERS
+    // ──────────────────────────────────────────────────────────────────────
     private array $OLD_USERS = [
         [
             'id'       => 1,
             'name'     => 'Admin',
             'email'    => 'admin@alakhirahacademy.com',
             'password' => '$2y$12$sLV0kiNv2ixzaFWTAEt09.NSeyaYg8.YkkBViUGaEg9mx3b44BcD6',
-            'role'     => 'admin',
+            'role'     => 'Admin',
         ],
         [
             'id'       => 2,
-            'name'     => 'Admisssion officer',
+            'name'     => 'Admission Officer',
             'email'    => 'admission@alakhirahacademy.com',
             'password' => '$2y$12$PALD0lVU.j2JfLTJZl3aAeN.XcEsJIO6enV4owM1ubl8x5dl8X7PO',
-            'role'     => 'admission_office',
+            'role'     => 'Admission Office',
         ],
     ];
 
+    // ──────────────────────────────────────────────────────────────────────
+    // OLD PROJECT — CLASSROOMS
+    // ──────────────────────────────────────────────────────────────────────
     private array $OLD_CLASSROOMS = [
         [
-            'id'                       => 1,
-            'name'                     => 'Hifz',
-            'class_id'                 => '786',
-            'max_students_per_section' => 40,
-            'admission_fee'            => 15000,
-            'sections'                 => '["Male","Female"]',
-            'fees'                     => '[{"name":"Exam Fee","type":"Half-Yearly","amount":5000},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000},{"name":"Monthly Fee (2 Shift)","type":"Monthly","amount":8000},{"name":"Monthly Fee (3 Shift)","type":"Monthly","amount":10000}]',
+            'id'            => 1,
+            'name'          => 'Hifz',
+            'code'          => '786',
+            'admission_fee' => 15000,
+            'sections'      => ['Male', 'Female'],
+            'fees'          => [
+                ['name' => 'Exam Fee',              'type' => 'Half-Yearly', 'amount' => 5000],
+                ['name' => 'Monthly Fee (1 Shift)', 'type' => 'Monthly',     'amount' => 5000],
+                ['name' => 'Monthly Fee (2 Shift)', 'type' => 'Monthly',     'amount' => 8000],
+                ['name' => 'Monthly Fee (3 Shift)', 'type' => 'Monthly',     'amount' => 10000],
+            ],
         ],
         [
-            'id'                       => 2,
-            'name'                     => 'Pre-Play',
-            'class_id'                 => '110',
-            'max_students_per_section' => 40,
-            'admission_fee'            => 70000,
-            'sections'                 => '["Male","Female"]',
-            'fees'                     => '[{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000},{"name":"Hifz","type":"Monthly","amount":2000}]',
+            'id'            => 2,
+            'name'          => 'Pre-Play',
+            'code'          => '110',
+            'admission_fee' => 70000,
+            'sections'      => ['Male', 'Female'],
+            'fees'          => [
+                ['name' => 'Drawing & Crafting Fee', 'type' => 'Half-Yearly', 'amount' => 4000],
+                ['name' => 'Exam Fee',               'type' => 'Half-Yearly', 'amount' => 3000],
+                ['name' => 'Monthly Tuition Fee',    'type' => 'Monthly',     'amount' => 8000],
+                ['name' => 'Hifz',                   'type' => 'Monthly',     'amount' => 2000],
+            ],
         ],
         [
-            'id'                       => 3,
-            'name'                     => 'Play',
-            'class_id'                 => '111',
-            'max_students_per_section' => 40,
-            'admission_fee'            => 70000,
-            'sections'                 => '["Male","Female"]',
-            'fees'                     => '[{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000},{"name":"Hifz","type":"Monthly","amount":2000}]',
+            'id'            => 3,
+            'name'          => 'Play',
+            'code'          => '111',
+            'admission_fee' => 70000,
+            'sections'      => ['Male', 'Female'],
+            'fees'          => [
+                ['name' => 'Drawing & Crafting Fee', 'type' => 'Half-Yearly', 'amount' => 4000],
+                ['name' => 'Exam Fee',               'type' => 'Half-Yearly', 'amount' => 3000],
+                ['name' => 'Monthly Tuition Fee',    'type' => 'Monthly',     'amount' => 8000],
+                ['name' => 'Hifz',                   'type' => 'Monthly',     'amount' => 2000],
+            ],
         ],
         [
-            'id'                       => 4,
-            'name'                     => 'Kg',
-            'class_id'                 => '112',
-            'max_students_per_section' => 40,
-            'admission_fee'            => 70000,
-            'sections'                 => '["Male","Female"]',
-            'fees'                     => '[{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000},{"name":"Hifz","type":"Monthly","amount":2000}]',
+            'id'            => 4,
+            'name'          => 'Kg',
+            'code'          => '112',
+            'admission_fee' => 70000,
+            'sections'      => ['Male', 'Female'],
+            'fees'          => [
+                ['name' => 'Drawing & Crafting Fee', 'type' => 'Half-Yearly', 'amount' => 4000],
+                ['name' => 'Exam Fee',               'type' => 'Half-Yearly', 'amount' => 3000],
+                ['name' => 'Monthly Tuition Fee',    'type' => 'Monthly',     'amount' => 8000],
+                ['name' => 'Hifz',                   'type' => 'Monthly',     'amount' => 2000],
+            ],
         ],
     ];
 
+    // ──────────────────────────────────────────────────────────────────────
+    // OLD PROJECT — STUDENTS
+    // Parsed directly from students.csv
+    // ──────────────────────────────────────────────────────────────────────
     private array $OLD_STUDENTS = [
-        ['id'=>2,  'student_id'=>'MIG00002','name'=>'MAISARAH HAMMANAH KABIR','dob'=>'2017-01-12','gender'=>'female','class_id'=>3,'section'=>'Female','father_name'=>'MD HUMAYAN KABIR','mother_name'=>'MASKATIA AHMED','father_mobile'=>'01730032374','mother_mobile'=>'','address'=>'H NO 88,89,ROAD NO 4, MAHANAGAR HOUSING PROJECT,WEST RAMPURA,DHAKA','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-04','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":0},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":0},{"fee_name":"Hifz","amount":2000,"discount":0}]'],
-        ['id'=>3,  'student_id'=>'MIG00003','name'=>'AJWAD AHMAD','dob'=>'2020-07-25','gender'=>'male','class_id'=>4,'section'=>'Male','father_name'=>'ABRAR AHMED NABIL','mother_name'=>'HOSNE NAZIA TANZIM','father_mobile'=>'01712706827','mother_mobile'=>'01751925995','address'=>'Genetie Huq Garden,House - 01,Flat -10/1,1 no Ring Road,Shyamoli,Dhaka','program_type'=>'Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-04','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":0}]'],
-        ['id'=>4,  'student_id'=>'MIG00004','name'=>'Abdullah Al Ifrad','dob'=>'2020-09-03','gender'=>'male','class_id'=>3,'section'=>'Male','father_name'=>'Md. Emdadul Huq Miaji','mother_name'=>'Nasrin Noman','father_mobile'=>'01752322590','mother_mobile'=>'','address'=>'176/6/ka, Ahmed Nagar, Ansar Camp, Mirpur-1','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":1000,"is_permanent":false},{"fee_name":"Hifz","amount":2000,"discount":0}]'],
-        ['id'=>5,  'student_id'=>'MIG00005','name'=>'AMAYRA AFEEF','dob'=>'2018-12-18','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'AFEEF AHMED','mother_name'=>'SIRAZUM MUNIRA','father_mobile'=>'01767820855','mother_mobile'=>'','address'=>'House : 125,Road :9 A, West Dhanmondi,Dhaka','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0}]'],
-        ['id'=>6,  'student_id'=>'MIG00006','name'=>'ALFIDA KAMAL MARYAM','dob'=>'2021-05-23','gender'=>'female','class_id'=>3,'section'=>'Female','father_name'=>'MD KAMAL HOSSAIN','mother_name'=>'MURTOZA BEGUM','father_mobile'=>'01713314987','mother_mobile'=>'','address'=>'49/1,MITALI ROAD,ZIGATALA,DHANMONDI,DHAKA','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":1500,"is_permanent":false},{"fee_name":"Hifz","amount":2000,"discount":0}]'],
-        ['id'=>7,  'student_id'=>'MIG00007','name'=>'AHNAF RAHMAN FUAD','dob'=>'2022-07-29','gender'=>'male','class_id'=>2,'section'=>'Male','father_name'=>'MD.MASUDUR RAHMAN','mother_name'=>'RUMA AHMED','father_mobile'=>'01952757840','mother_mobile'=>'','address'=>'68 SUKRABAD SUBHANBAG,DHANMONDI DHAKA','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":62000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Hifz","amount":2000,"discount":1000,"is_permanent":false},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":4000,"is_permanent":false}]'],
-        ['id'=>8,  'student_id'=>'MIG00008','name'=>'IBSAN BIN ZAMAN','dob'=>'2019-03-05','gender'=>'male','class_id'=>4,'section'=>'Male','father_name'=>'MOHAMMAD ASHRAFUZZAMAN','mother_name'=>'RABEYA BEGUM','father_mobile'=>'01770077787','mother_mobile'=>'','address'=>'FLAT-3B,101, INDIRA ROAD, SHERE-BANGLA NAGAR, TEJGOAN-1215','program_type'=>'Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":50000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":0}]'],
-        ['id'=>9,  'student_id'=>'MIG00009','name'=>'ABDUR RAHMAN TAIMOOR','dob'=>'2021-11-03','gender'=>'male','class_id'=>2,'section'=>'Male','father_name'=>'TANVIR AHMED','mother_name'=>'MALIHA MONIR BARSHA','father_mobile'=>'01709607557','mother_mobile'=>'','address'=>'RUPOSHI-PROCTIVE VILLAGE,MIRPUR-14','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-07','status'=>'active','discounts'=>'[{"fee_name":"Hifz","discount_type":"fixed","value":500},{"fee_name":"Monthly Tuition Fee","discount_type":"fixed","value":3000}]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":0},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Hifz","amount":2000,"discount":500},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":3000}]'],
-        ['id'=>10, 'student_id'=>'MIG00010','name'=>'ALEENA RAHMAN','dob'=>'2021-06-25','gender'=>'female','class_id'=>3,'section'=>'Female','father_name'=>'MD.SYDUR RAHMAN','mother_name'=>'NOSHIN NAWER','father_mobile'=>'01676086691','mother_mobile'=>'','address'=>'FLAT 14,HOUSE NO 300,TALI OFFICE ROAD,RAYERBAZAR,DHAKA','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":2000,"is_permanent":false},{"fee_name":"Hifz","amount":2000,"discount":1000,"is_permanent":false}]'],
-        ['id'=>11, 'student_id'=>'MIG00011','name'=>'Amanah Faryat Radiya','dob'=>'2021-09-22','gender'=>'female','class_id'=>3,'section'=>'Female','father_name'=>'Anik Alamgir','mother_name'=>'Zarin Tasnim','father_mobile'=>'01749206835','mother_mobile'=>'','address'=>'House # 216,Road #Lake Road 14 Mohakhali DOHS,Dhaka -1206','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":0},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":0},{"fee_name":"Hifz","amount":2000,"discount":0}]'],
-        ['id'=>13, 'student_id'=>'MIG00013','name'=>'Ammar Yousuf Khan','dob'=>'2022-04-03','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'Saeed Anwar Khan','mother_name'=>'Khadija Jahan','father_mobile'=>'01827854137','mother_mobile'=>'','address'=>'Flat D4,Rongon,18/4,Tallabag,Sobahanbag,Dhaka','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0}]'],
-        ['id'=>14, 'student_id'=>'MIG00014','name'=>'Ammar Bin Nazib','dob'=>'2022-04-08','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'Nazibul Islam','mother_name'=>'Nabila Afrin','father_mobile'=>'01676765741','mother_mobile'=>'','address'=>'68 Shukrabad Dhanmondi Flat - 5.d','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0}]'],
-        ['id'=>15, 'student_id'=>'MIG00015','name'=>'MUAAZ ZAHRAN KABIR','dob'=>'2024-01-12','gender'=>'male','class_id'=>2,'section'=>'Male','father_name'=>'MD HUMAYAN KABIR','mother_name'=>'MASKATIA AHMED','father_mobile'=>'01730032374','mother_mobile'=>'','address'=>'H NO 88,89,ROAD NO 4,MAHANAGAR HOUSING PROJECT,WEST RAMPURA,DHAKA','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Hifz","amount":2000,"discount":1000,"is_permanent":false},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":0}]'],
-        ['id'=>16, 'student_id'=>'MIG00016','name'=>'FATIMA JANNAH','dob'=>'2013-12-18','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'MD.REZAUL ISLAM','mother_name'=>'FERDOUSI AKTER','father_mobile'=>'01720304132','mother_mobile'=>'','address'=>'HOUSE 28/A (SOUTH PRIDE),ROAD 27,DHANMONDI,DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-08','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (2 Shift)","amount":8000,"discount":0}]'],
-        ['id'=>17, 'student_id'=>'MIG00017','name'=>'MUHSINAT SAMAYRA','dob'=>'2022-02-06','gender'=>'female','class_id'=>2,'section'=>'Female','father_name'=>'MD MUHSHIUL ALAM','mother_name'=>'MEHERUN NESA','father_mobile'=>'01675764525','mother_mobile'=>'','address'=>'64,GREEN ROAD,DHAKA-1205','program_type'=>'Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-11','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":0}]'],
-        ['id'=>18, 'student_id'=>'MIG00018','name'=>'AZEEBA RAHMAN AZRA','dob'=>'2018-01-25','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'MOQBULUR RAHMAN','mother_name'=>'SHARMIN MRIDHA','father_mobile'=>'01706995806','mother_mobile'=>'','address'=>'8/A/1, ZENITH TOWER,DHANMONDI,ROAD 14 NEW,DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-11','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0}]'],
-        ['id'=>19, 'student_id'=>'MIG00019','name'=>'MOHAMMAD AYMAN RAHMAN ABDULLAH','dob'=>'2016-07-22','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'MOHAMMAD MOQBULUR RAHMAN','mother_name'=>'SHARMIN MRIDHA','father_mobile'=>'01706995806','mother_mobile'=>'','address'=>'8/A/1, ZENITH TOWER,DHANMONDI,ROAD 14 NEW,DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-11','status'=>'active','discounts'=>'[{"fee_name":"Monthly Fee (1 Shift)","discount_type":"fixed","value":1000}]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":7500},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":1000}]'],
-        ['id'=>20, 'student_id'=>'MIG00020','name'=>'MOHAMMAD ABDUR RAHMAN ASIM','dob'=>'2020-08-14','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'MOHAMMAD MOQBULUR RAHMAN','mother_name'=>'SHARMIN MRIDHA','father_mobile'=>'01706995806','mother_mobile'=>'','address'=>'8/A/1, ZENITH TOWER,DHANMONDI,ROAD 14 NEW,DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-11','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":7500},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":2500}]'],
-        ['id'=>21, 'student_id'=>'MIG00021','name'=>'SYEDA FATIMA ASEEF NOURAN','dob'=>'2017-08-06','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'SYED ASEEF ALTAF','mother_name'=>'FAHIMA SHAFI','father_mobile'=>'01748686138','mother_mobile'=>'','address'=>'1/3, LALMATIA BLOCK E, DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-09','status'=>'active','discounts'=>'[{"fee_name":"Monthly Fee (1 Shift)","discount_type":"fixed","value":1000,"is_permanent":true}]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":1000}]'],
-        ['id'=>22, 'student_id'=>'MIG00022','name'=>'SYED FAIZAAN BIN ASEEF','dob'=>'2020-10-05','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'SYED ASEEF ALTAF','mother_name'=>'FAHIMA SHAFI','father_mobile'=>'01748686138','mother_mobile'=>'','address'=>'1/3, LALMATIA BLOCK E, DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-09','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":15000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0}]'],
-        ['id'=>23, 'student_id'=>'MIG00023','name'=>'SAMEEHA KAREEM','dob'=>'2015-10-12','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'SAFIUL KAREEM','mother_name'=>'SHAJEDA AKHTAR KHANAM','father_mobile'=>'01986133281','mother_mobile'=>'','address'=>'HOUSE NO 11/5 FLAT-E2 ROAD NO 1,KALLYANPUR,DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-11','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0}]'],
-        ['id'=>24, 'student_id'=>'MIG00024','name'=>'NUSAYBA SHADLEEN ANAYA','dob'=>'2013-11-13','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'MD KHAIRUL ISLAM','mother_name'=>'ZAKIA AHMED','father_mobile'=>'01769764548','mother_mobile'=>'','address'=>'2H/S GOLDEN STREET FLAT-B2,RING ROAD,SHYMOLI,DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-11','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (3 Shift)","amount":10000,"discount":0}]'],
-        ['id'=>25, 'student_id'=>'MIG00025','name'=>'MD.RUSHDAN JUBRAN','dob'=>'2017-03-23','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'MD.ARIFIN JUBAED','mother_name'=>'UMME KULSUM','father_mobile'=>'01734034947','mother_mobile'=>'','address'=>'FLAT NO 6B,HOUSE NO 178,ROAD NO 12/A, WEST DHANMONDI,DHAKA.','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-11','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0}]'],
-        ['id'=>31, 'student_id'=>'MIG00031','name'=>'FATEEMAH FIYANA MAHMUD','dob'=>'2019-07-07','gender'=>'female','class_id'=>4,'section'=>'Female','father_name'=>'Mahmudur Rahman','mother_name'=>'Tahsina Khan','father_mobile'=>'01534548562','mother_mobile'=>'','address'=>'232 SULTANGANG ROAD RAYERBAZAR,DHAKA','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-11','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":52500},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":1500,"is_permanent":false},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":4000,"is_permanent":false},{"fee_name":"Hifz","amount":2000,"discount":1000,"is_permanent":false}]'],
-        ['id'=>33, 'student_id'=>'MIG00033','name'=>'Tania Binte Wahed','dob'=>null,'gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'Md Abdul Wahed','mother_name'=>'Najmun Nahar','father_mobile'=>'01815806111','mother_mobile'=>'','address'=>'','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-13','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0}]'],
-        ['id'=>35, 'student_id'=>'MIG00035','name'=>'UMAR IBN ABDULLAH','dob'=>'2023-01-16','gender'=>'male','class_id'=>2,'section'=>'Male','father_name'=>'ABDULLAH MAHMOOD','mother_name'=>'TAMANNA AFRIN','father_mobile'=>'01748311388','mother_mobile'=>'','address'=>'HOUSE NO-16/18,ROAD-02,BLOCK-B,NOBODOY HOUSUING SOCIETY,MOHAMMADPUR,DHAKA','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-19','status'=>'active','discounts'=>'[{"fee_name":"Monthly Tuition Fee","discount_type":"fixed","value":3000,"is_permanent":true},{"fee_name":"Hifz","discount_type":"fixed","value":1000,"is_permanent":true}]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":59000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":3000,"is_permanent":true},{"fee_name":"Hifz","amount":2000,"discount":1000,"is_permanent":true}]'],
-        ['id'=>36, 'student_id'=>'MIG00036','name'=>'ALVI AYAAN','dob'=>'2018-10-10','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'MAMUN ABDULLAH','mother_name'=>'AKHINOOR SIDDIQUA','father_mobile'=>'01950490016','mother_mobile'=>'','address'=>'HOUSE NO 8/A,8/1,ROAD NO 14(NEW),DHANMONDI DHAKA','program_type'=>'Hifz','shift'=>'Evening','nid_file_path'=>null,'enrollment_date'=>'2026-01-20','status'=>'active','discounts'=>'[{"fee_name":"Monthly Fee (1 Shift)","discount_type":"fixed","value":1000,"is_permanent":true}]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":5000},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":1000,"is_permanent":true}]'],
-        ['id'=>37, 'student_id'=>'MIG00037','name'=>'TAHRIKA TASKIN','dob'=>'2012-04-10','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'MUHAMMAD TOUFIQUL ISLAM','mother_name'=>'MAHJABIN AKTER','father_mobile'=>'01610600070','mother_mobile'=>'','address'=>'HOUSE- 28/A,ROAD 27(OLD) 16 NEW,DHANMONDI,DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-01-22','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Exam Fee","amount":5000,"discount":0},{"fee_name":"Monthly Fee (3 Shift)","amount":10000,"discount":0}]'],
-        ['id'=>39, 'student_id'=>'MIG00039','name'=>'FAATIMAH MUHAMMAD RAHIM','dob'=>'2021-11-10','gender'=>'female','class_id'=>3,'section'=>'Female','father_name'=>'MOIHAMMED SAJIDUR RAHIM','mother_name'=>'LAILA NAZMEEN','father_mobile'=>'01741565108','mother_mobile'=>'','address'=>'HOUSE NO 99,ROAD NO 11/A,DHANMONDI R/A,DHAKA','program_type'=>'Hifz, Schooling','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-02-01','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":70000,"discount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000,"discount":0},{"fee_name":"Monthly Tuition Fee","amount":8000,"discount":0},{"fee_name":"Hifz","amount":2000,"discount":0},{"fee_name":"Exam Fee","amount":3000,"discount":0}]'],
-        ['id'=>40, 'student_id'=>'MIG00040','name'=>'SAFIYYAH BINT TAREQ','dob'=>'2014-07-04','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'TAREQ HUSSAIN','mother_name'=>'SUMAIYA AMIN','father_mobile'=>'01618304041','mother_mobile'=>'','address'=>'52 JAGANNATH SHAHA ROAD,AMLIGOLA,LALBAGH,DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-02-01','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":0},{"fee_name":"Monthly Fee (3 Shift)","amount":10000,"discount":0},{"fee_name":"Monthly Fee (2 Shift)","amount":8000,"discount":0}]'],
-        ['id'=>41, 'student_id'=>'MIG00041','name'=>'AJMAEEN FAIEQ RAHMAN','dob'=>'2011-10-09','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'MD.MATIUR RAHMAN','mother_name'=>'QUAZI SABNAM','father_mobile'=>'01735860609','mother_mobile'=>'','address'=>'HOUSE NO 146,ROAD 12/A,WEST DHANMONDI,DHAKA-1209','program_type'=>'Hifz','shift'=>'Evening','nid_file_path'=>null,'enrollment_date'=>'2026-01-31','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":0},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":2500}]'],
-        ['id'=>42, 'student_id'=>'MIG00042','name'=>'AMAAN MAHROOZ RAHMAN','dob'=>'2019-07-07','gender'=>'male','class_id'=>1,'section'=>'Male','father_name'=>'MD.MATIUR RAHMAN','mother_name'=>'QUAZI SABNAM','father_mobile'=>'01735860609','mother_mobile'=>'','address'=>'HOUSE NO 146,ROAD 12/A,WEST DHANMONDI,DHAKA-1209','program_type'=>'Hifz','shift'=>'Evening','nid_file_path'=>null,'enrollment_date'=>'2026-02-01','status'=>'active','discounts'=>'[]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":15000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":2500}]'],
-        ['id'=>43, 'student_id'=>'MIG00043','name'=>'TANZINA TABASSHUM','dob'=>'1984-11-19','gender'=>'female','class_id'=>1,'section'=>'Female','father_name'=>'M D FAZLUL KARIM','mother_name'=>'NURUN NAHAR','father_mobile'=>'01911346096','mother_mobile'=>'','address'=>'ROAD 2A,HOUSE 45,DHANMONDI DHAKA','program_type'=>'Hifz','shift'=>'Morning','nid_file_path'=>null,'enrollment_date'=>'2026-02-15','status'=>'active','discounts'=>'[{"fee_name":"Monthly Fee (1 Shift)","discount_type":"fixed","value":1000,"is_permanent":true}]','selected_fees'=>'[{"fee_name":"Admission Fee","amount":15000,"discount":5000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000,"discount":1000,"is_permanent":true}]'],
+        ['id'=>2,  'name'=>'MAISARAH HAMMANAH KABIR',          'class_id'=>3,'section'=>'Female','dob'=>'2017-01-12','gender'=>'Female','father_name'=>'MD HUMAYAN KABIR',           'mother_name'=>'MASKATIA AHMED',      'father_mobile'=>'01730032374','mother_mobile'=>'',            'address'=>'H NO 88,89,ROAD NO 4, MAHANAGAR HOUSING PROJECT,WEST RAMPURA,DHAKA',                   'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":0},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":0},{"name":"Hifz","type":"Monthly","amount":2000,"discount":0}]',
+            'discounts'=>'{"Hifz":{"amount":0,"permanent":0},"Exam Fee":{"amount":0,"permanent":0},"Admission Fee":{"amount":0,"permanent":0},"Monthly Tuition Fee":{"amount":0,"permanent":0},"Drawing & Crafting Fee":{"amount":0,"permanent":0}}'],
+
+        ['id'=>3,  'name'=>'AJWAD AHMAD',                      'class_id'=>4,'section'=>'Male',  'dob'=>'2020-07-25','gender'=>'Male',  'father_name'=>'ABRAR AHMED NABIL',          'mother_name'=>'HOSNE NAZIA TANZIM',  'father_mobile'=>'01712706827','mother_mobile'=>'01751925995', 'address'=>'Genetie Huq Garden,House - 01,Flat -10/1,1 no Ring Road,Shyamoli,Dhaka',               'program_type'=>'Schooling',      'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":35000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>4,  'name'=>'Abdullah Al Ifrad',                'class_id'=>3,'section'=>'Male',  'dob'=>'2020-09-03','gender'=>'Male',  'father_name'=>'Md. Emdadul Huq Miaji',      'mother_name'=>'Nasrin Noman',        'father_mobile'=>'01752322590','mother_mobile'=>'',            'address'=>'176/6/ka, Ahmed Nagar, Ansar Camp, Mirpur-1',                                          'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":35000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":1000,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>5,  'name'=>'AMAYRA AFEEF',                     'class_id'=>1,'section'=>'Female','dob'=>'2018-12-18','gender'=>'Female','father_name'=>'AFEEF AHMED',                 'mother_name'=>'SIRAZUM MUNIRA',      'father_mobile'=>'01767820855','mother_mobile'=>'',            'address'=>'House : 125,Road :9 A, West Dhanmondi,Dhaka',                                          'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>6,  'name'=>'ALFIDA KAMAL MARYAM',              'class_id'=>3,'section'=>'Female','dob'=>'2021-05-23','gender'=>'Female','father_name'=>'MD KAMAL HOSSAIN',            'mother_name'=>'MURTOZA BEGUM',       'father_mobile'=>'01713314987','mother_mobile'=>'',            'address'=>'49/1,MITALI ROAD,ZIGATALA,DHANMONDI,DHAKA',                                            'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":35000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":1500,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>7,  'name'=>'AHNAF RAHMAN FUAD',                'class_id'=>2,'section'=>'Male',  'dob'=>'2022-07-29','gender'=>'Male',  'father_name'=>'MD.MASUDUR RAHMAN',           'mother_name'=>'RUMA AHMED',          'father_mobile'=>'01952757840','mother_mobile'=>'',            'address'=>'68 SUKRABAD SUBHANBAG,DHANMONDI DHAKA',                                                'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":62000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":1000,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":4000,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>8,  'name'=>'IBSAN BIN ZAMAN',                  'class_id'=>4,'section'=>'Male',  'dob'=>'2019-03-05','gender'=>'Male',  'father_name'=>'MOHAMMAD ASHRAFUZZAMAN',      'mother_name'=>'RABEYA BEGUM',        'father_mobile'=>'01770077787','mother_mobile'=>'',            'address'=>'FLAT-3B,101, INDIRA ROAD, SHERE-BANGLA NAGAR, TEJGOAN-1215',                           'program_type'=>'Schooling',      'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":50000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>9,  'name'=>'ABDUR RAHMAN TAIMOOR',             'class_id'=>2,'section'=>'Male',  'dob'=>'2021-11-03','gender'=>'Male',  'father_name'=>'TANVIR AHMED',                'mother_name'=>'MALIHA MONIR BARSHA', 'father_mobile'=>'01709607557','mother_mobile'=>'',            'address'=>'RUPOSHI-PROCTIVE VILLAGE,MIRPUR-14',                                                   'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":0,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":500,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":3000,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>10, 'name'=>'ALEENA RAHMAN',                    'class_id'=>3,'section'=>'Female','dob'=>'2021-06-25','gender'=>'Female','father_name'=>'MD.SYDUR RAHMAN',             'mother_name'=>'NOSHIN NAWER',        'father_mobile'=>'01676086691','mother_mobile'=>'',            'address'=>'FLAT 14,HOUSE NO 300,TALI OFFICE ROAD,RAYERBAZAR,DHAKA',                              'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":35000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":2000,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":1000,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>11, 'name'=>'Amanah Faryat Radiya',             'class_id'=>3,'section'=>'Female','dob'=>'2021-09-22','gender'=>'Female','father_name'=>'Anik Alamgir',                'mother_name'=>'Zarin Tasnim',        'father_mobile'=>'01749206835','mother_mobile'=>'',            'address'=>'House # 216,Road #Lake Road 14 Mohakhali DOHS,Dhaka -1206',                           'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":0,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":0,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>13, 'name'=>'Ammar Yousuf Khan',                'class_id'=>1,'section'=>'Male',  'dob'=>'2022-04-03','gender'=>'Male',  'father_name'=>'Saeed Anwar Khan',            'mother_name'=>'Khadija Jahan',       'father_mobile'=>'01827854137','mother_mobile'=>'',            'address'=>'Flat D4,Rongon,18/4,Tallabag,Sobahanbag,Dhaka',                                       'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>14, 'name'=>'Ammar Bin Nazib',                  'class_id'=>1,'section'=>'Male',  'dob'=>'2022-04-08','gender'=>'Male',  'father_name'=>'Nazibul Islam',               'mother_name'=>'Nabila Afrin',        'father_mobile'=>'01676765741','mother_mobile'=>'',            'address'=>'68 Shukrabad Dhanmondi Flat - 5.d',                                                    'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>15, 'name'=>'MUAAZ ZAHRAN KABIR',               'class_id'=>2,'section'=>'Male',  'dob'=>'2024-01-12','gender'=>'Male',  'father_name'=>'MD HUMAYAN KABIR',            'mother_name'=>'MASKATIA AHMED',      'father_mobile'=>'01730032374','mother_mobile'=>'',            'address'=>'H NO 88,89,ROAD NO 4,MAHANAGAR HOUSING PROJECT,WEST RAMPURA,DHAKA',                   'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":35000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":1000,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>16, 'name'=>'FATIMA JANNAH',                    'class_id'=>1,'section'=>'Female','dob'=>'2013-12-18','gender'=>'Female','father_name'=>'MD.REZAUL ISLAM',             'mother_name'=>'FERDOUSI AKTER',      'father_mobile'=>'01720304132','mother_mobile'=>'',            'address'=>'HOUSE 28/A (SOUTH PRIDE),ROAD 27,DHANMONDI,DHAKA',                                    'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (2 Shift)","type":"Monthly","amount":8000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>17, 'name'=>'MUHSINAT SAMAYRA',                 'class_id'=>2,'section'=>'Female','dob'=>'2022-02-06','gender'=>'Female','father_name'=>'MD MUHSHIUL ALAM',            'mother_name'=>'MEHERUN NESA',        'father_mobile'=>'01675764525','mother_mobile'=>'',            'address'=>'64,GREEN ROAD,DHAKA-1205',                                                             'program_type'=>'Schooling',      'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":35000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>18, 'name'=>'AZEEBA RAHMAN AZRA',               'class_id'=>1,'section'=>'Female','dob'=>'2018-01-25','gender'=>'Female','father_name'=>'MOQBULUR RAHMAN',             'mother_name'=>'SHARMIN MRIDHA',      'father_mobile'=>'01706995806','mother_mobile'=>'',            'address'=>'8/A/1, ZENITH TOWER,DHANMONDI,ROAD 14 NEW,DHAKA',                                     'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>19, 'name'=>'MOHAMMAD AYMAN RAHMAN ABDULLAH',   'class_id'=>1,'section'=>'Male',  'dob'=>'2016-07-22','gender'=>'Male',  'father_name'=>'MOHAMMAD MOQBULUR RAHMAN',    'mother_name'=>'SHARMIN MRIDHA',      'father_mobile'=>'01706995806','mother_mobile'=>'',            'address'=>'8/A/1, ZENITH TOWER,DHANMONDI,ROAD 14 NEW,DHAKA',                                     'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":7500,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":1000,"is_permanent":false}]',
+            'discounts'=>'[{"fee_name":"Monthly Fee (1 Shift)","discount_type":"fixed","value":1000}]'],
+
+        ['id'=>20, 'name'=>'MOHAMMAD ABDUR RAHMAN ASIM',       'class_id'=>1,'section'=>'Male',  'dob'=>'2020-08-14','gender'=>'Male',  'father_name'=>'MOHAMMAD MOQBULUR RAHMAN',    'mother_name'=>'SHARMIN MRIDHA',      'father_mobile'=>'01706995806','mother_mobile'=>'',            'address'=>'8/A/1, ZENITH TOWER,DHANMONDI,ROAD 14 NEW,DHAKA',                                     'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":7500,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":2500,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>21, 'name'=>'SYEDA FATIMA ASEEF NOURAN',        'class_id'=>1,'section'=>'Female','dob'=>'2017-08-06','gender'=>'Female','father_name'=>'SYED ASEEF ALTAF',            'mother_name'=>'FAHIMA SHAFI',        'father_mobile'=>'01748686138','mother_mobile'=>'',            'address'=>'1/3, LALMATIA BLOCK E, DHAKA',                                                         'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":1000,"is_permanent":true}]',
+            'discounts'=>'[{"fee_name":"Monthly Fee (1 Shift)","discount_type":"fixed","value":1000,"is_permanent":true}]'],
+
+        ['id'=>22, 'name'=>'SYED FAIZAAN BIN ASEEF',           'class_id'=>1,'section'=>'Male',  'dob'=>'2020-10-05','gender'=>'Male',  'father_name'=>'SYED ASEEF ALTAF',            'mother_name'=>'FAHIMA SHAFI',        'father_mobile'=>'01748686138','mother_mobile'=>'',            'address'=>'1/3, LALMATIA BLOCK E, DHAKA',                                                         'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":15000,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>23, 'name'=>'SAMEEHA KAREEM',                   'class_id'=>1,'section'=>'Female','dob'=>'2015-10-12','gender'=>'Female','father_name'=>'SAFIUL KAREEM',               'mother_name'=>'SHAJEDA AKHTAR KHANAM','father_mobile'=>'01986133281','mother_mobile'=>'',           'address'=>'HOUSE NO 11/5 FLAT-E2 ROAD NO 1,KALLYANPUR,DHAKA',                                    'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>24, 'name'=>'NUSAYBA SHADLEEN ANAYA',           'class_id'=>1,'section'=>'Female','dob'=>'2013-11-13','gender'=>'Female','father_name'=>'MD KHAIRUL ISLAM',            'mother_name'=>'ZAKIA AHMED',         'father_mobile'=>'01769764548','mother_mobile'=>'',            'address'=>'2H/S GOLDEN STREET FLAT-B2,RING ROAD,SHYMOLI,DHAKA',                                  'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (3 Shift)","type":"Monthly","amount":10000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>25, 'name'=>'MD.RUSHDAN JUBRAN',                'class_id'=>1,'section'=>'Male',  'dob'=>'2017-03-23','gender'=>'Male',  'father_name'=>'MD.ARIFIN JUBAED',            'mother_name'=>'UMME KULSUM',         'father_mobile'=>'01734034947','mother_mobile'=>'',            'address'=>'FLAT NO 6B,HOUSE NO 178,ROAD NO 12/A, WEST DHANMONDI,DHAKA.',                         'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>31, 'name'=>'FATEEMAH FIYANA MAHMUD',           'class_id'=>4,'section'=>'Female','dob'=>'2019-07-07','gender'=>'Female','father_name'=>'Mahmudur Rahman',             'mother_name'=>'Tahsina Khan',        'father_mobile'=>'01534548562','mother_mobile'=>'',            'address'=>'232 SULTANGANG ROAD RAYERBAZAR,DHAKA',                                                 'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":52500,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":1500,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":4000,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":1000,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>33, 'name'=>'Tania Binte Wahed',                'class_id'=>1,'section'=>'Female','dob'=>null,        'gender'=>'Female','father_name'=>'Md Abdul Wahed',              'mother_name'=>'Najmun Nahar',        'father_mobile'=>'01815806111','mother_mobile'=>'',            'address'=>'',                                                                                     'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>35, 'name'=>'UMAR IBN ABDULLAH',                'class_id'=>2,'section'=>'Male',  'dob'=>'2023-01-16','gender'=>'Male',  'father_name'=>'ABDULLAH MAHMOOD',            'mother_name'=>'TAMANNA AFRIN',       'father_mobile'=>'01748311388','mother_mobile'=>'',            'address'=>'HOUSE NO-16/18,ROAD-02,BLOCK-B,NOBODOY HOUSUING SOCIETY,MOHAMMADPUR,DHAKA',           'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":59000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":3000,"is_permanent":true},{"name":"Hifz","type":"Monthly","amount":2000,"discount":1000,"is_permanent":true}]',
+            'discounts'=>'{"Monthly Tuition Fee":{"amount":3000,"permanent":1},"Hifz":{"amount":1000,"permanent":1}}'],
+
+        ['id'=>36, 'name'=>'ALVI AYAAN',                       'class_id'=>1,'section'=>'Male',  'dob'=>'2018-10-10','gender'=>'Male',  'father_name'=>'MAMUN ABDULLAH',              'mother_name'=>'AKHINOOR SIDDIQUA',   'father_mobile'=>'01950490016','mother_mobile'=>'',            'address'=>'HOUSE NO 8/A,8/1,ROAD NO 14(NEW),DHANMONDI DHAKA',                                    'program_type'=>'Hifz',           'shift'=>'Evening',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":5000,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":1000,"is_permanent":true}]',
+            'discounts'=>'{"Monthly Fee (1 Shift)":{"amount":1000,"permanent":1}}'],
+
+        ['id'=>37, 'name'=>'TAHRIKA TASKIN',                   'class_id'=>1,'section'=>'Female','dob'=>'2012-04-10','gender'=>'Female','father_name'=>'MUHAMMAD TOUFIQUL ISLAM',     'mother_name'=>'MAHJABIN AKTER',      'father_mobile'=>'01610600070','mother_mobile'=>'',            'address'=>'HOUSE- 28/A,ROAD 27(OLD) 16 NEW,DHANMONDI,DHAKA',                                     'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (3 Shift)","type":"Monthly","amount":10000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>39, 'name'=>'FAATIMAH MUHAMMAD RAHIM',          'class_id'=>3,'section'=>'Female','dob'=>'2021-11-10','gender'=>'Female','father_name'=>'MOIHAMMED SAJIDUR RAHIM',     'mother_name'=>'LAILA NAZMEEN',       'father_mobile'=>'01741565108','mother_mobile'=>'',            'address'=>'HOUSE NO 99,ROAD NO 11/A,DHANMONDI R/A,DHAKA',                                        'program_type'=>'Hifz, Schooling','shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":70000,"discount":35000,"is_permanent":false},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000,"discount":0,"is_permanent":false},{"name":"Monthly Tuition Fee","type":"Monthly","amount":8000,"discount":0,"is_permanent":false},{"name":"Hifz","type":"Monthly","amount":2000,"discount":0,"is_permanent":false},{"name":"Exam Fee","type":"Half-Yearly","amount":3000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>40, 'name'=>'SAFIYYAH BINT TAREQ',              'class_id'=>1,'section'=>'Female','dob'=>'2014-07-04','gender'=>'Female','father_name'=>'TAREQ HUSSAIN',               'mother_name'=>'SUMAIYA AMIN',        'father_mobile'=>'01618304041','mother_mobile'=>'',            'address'=>'52 JAGANNATH SHAHA ROAD,AMLIGOLA,LALBAGH,DHAKA',                                       'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (3 Shift)","type":"Monthly","amount":10000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (2 Shift)","type":"Monthly","amount":8000,"discount":0,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>41, 'name'=>'AJMAEEN FAIEQ RAHMAN',             'class_id'=>1,'section'=>'Male',  'dob'=>'2011-10-09','gender'=>'Male',  'father_name'=>'MD.MATIUR RAHMAN',            'mother_name'=>'QUAZI SABNAM',        'father_mobile'=>'01735860609','mother_mobile'=>'',            'address'=>'HOUSE NO 146,ROAD 12/A,WEST DHANMONDI,DHAKA-1209',                                    'program_type'=>'Hifz',           'shift'=>'Evening',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":0,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":2500,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>42, 'name'=>'AMAAN MAHROOZ RAHMAN',             'class_id'=>1,'section'=>'Male',  'dob'=>'2019-07-07','gender'=>'Male',  'father_name'=>'MD.MATIUR RAHMAN',            'mother_name'=>'QUAZI SABNAM',        'father_mobile'=>'01735860609','mother_mobile'=>'',            'address'=>'HOUSE NO 146,ROAD 12/A,WEST DHANMONDI,DHAKA-1209',                                    'program_type'=>'Hifz',           'shift'=>'Evening',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":15000,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":2500,"is_permanent":false}]',
+            'discounts'=>'[]'],
+
+        ['id'=>43, 'name'=>'TANZINA TABASSHUM',                'class_id'=>1,'section'=>'Female','dob'=>'1984-11-19','gender'=>'Female','father_name'=>'M D FAZLUL KARIM',            'mother_name'=>'NURUN NAHAR',         'father_mobile'=>'01911346096','mother_mobile'=>'',            'address'=>'ROAD 2A,HOUSE 45,DHANMONDI DHAKA',                                                     'program_type'=>'Hifz',           'shift'=>'Morning',
+            'selected_fees'=>'[{"name":"Admission Fee","type":"One Time","amount":15000,"discount":5000,"is_permanent":false},{"name":"Monthly Fee (1 Shift)","type":"Monthly","amount":5000,"discount":1000,"is_permanent":true}]',
+            'discounts'=>'{"Monthly Fee (1 Shift)":{"amount":1000,"permanent":1}}'],
     ];
 
+    // ──────────────────────────────────────────────────────────────────────
+    // OLD PROJECT — PAYMENTS
+    // Parsed from payments.csv. Each row is ONE old payment record.
+    // fee_details is the JSON array of line items inside that payment.
+    // ──────────────────────────────────────────────────────────────────────
     private array $OLD_PAYMENTS = [
-        ['id'=>2,  'student_id'=>2,  'payment_mode'=>'cash',          'payment_date'=>'2026-01-04','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>3,  'student_id'=>3,  'payment_mode'=>'cash',          'payment_date'=>'2026-01-04','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
-        ['id'=>4,  'student_id'=>4,  'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":7000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>5,  'student_id'=>5,  'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>6,  'student_id'=>6,  'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":6500},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>7,  'student_id'=>7,  'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":8000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Hifz","amount":1000},{"fee_name":"Monthly Tuition Fee","amount":4000}]'],
-        ['id'=>8,  'student_id'=>8,  'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":20000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
-        ['id'=>9,  'student_id'=>9,  'payment_mode'=>'cash',          'payment_date'=>'2026-01-07','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":22750},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Hifz","amount":1000},{"fee_name":"Monthly Tuition Fee","amount":5500}]'],
-        ['id'=>10, 'student_id'=>10, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":6000},{"fee_name":"Hifz","amount":1000}]'],
-        ['id'=>11, 'student_id'=>11, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>13, 'student_id'=>13, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Exam Fee","amount":5000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>14, 'student_id'=>14, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Exam Fee","amount":5000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>15, 'student_id'=>15, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Hifz","amount":1000},{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
-        ['id'=>16, 'student_id'=>16, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-08','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Exam Fee","amount":5000},{"fee_name":"Monthly Fee (2 Shift)","amount":8000}]'],
-        ['id'=>17, 'student_id'=>17, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-01-11','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
-        ['id'=>18, 'student_id'=>18, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-11','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>19, 'student_id'=>19, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-11','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":7500},{"fee_name":"Monthly Fee (1 Shift)","amount":4000}]'],
-        ['id'=>20, 'student_id'=>20, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-11','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":7500},{"fee_name":"Monthly Fee (1 Shift)","amount":2500}]'],
-        ['id'=>21, 'student_id'=>21, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-09','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":4000},{"fee_name":"Admission Fee","amount":15000}]'],
-        ['id'=>22, 'student_id'=>22, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-09','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":3000}]'],
-        ['id'=>23, 'student_id'=>23, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-11','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>24, 'student_id'=>24, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-11','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Exam Fee","amount":5000},{"fee_name":"Monthly Fee (3 Shift)","amount":10000}]'],
-        ['id'=>25, 'student_id'=>25, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-11','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>33, 'student_id'=>31, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-11','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":17500},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":1500},{"fee_name":"Monthly Tuition Fee","amount":4000},{"fee_name":"Hifz","amount":1000}]'],
-        ['id'=>35, 'student_id'=>33, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-13','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>37, 'student_id'=>35, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-19','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":11000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Exam Fee","amount":3000},{"fee_name":"Monthly Tuition Fee","amount":5000},{"fee_name":"Hifz","amount":1000}]'],
-        ['id'=>38, 'student_id'=>36, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-01-20','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":10000},{"fee_name":"Monthly Fee (1 Shift)","amount":4000}]'],
-        ['id'=>39, 'student_id'=>37, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-01-22','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Exam Fee","amount":5000},{"fee_name":"Monthly Fee (3 Shift)","amount":10000}]'],
-        ['id'=>41, 'student_id'=>39, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-02-01','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Admission Fee","amount":35000},{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000},{"fee_name":"Exam Fee","amount":3000}]'],
-        ['id'=>43, 'student_id'=>40, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-01','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000},{"fee_name":"Monthly Fee (3 Shift)","amount":10000}]'],
-        ['id'=>44, 'student_id'=>23, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-01','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Exam Fee","amount":5000}]'],
-        ['id'=>45, 'student_id'=>23, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-01','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Exam Fee","amount":5000}]'],
-        ['id'=>46, 'student_id'=>41, 'payment_mode'=>'cash',          'payment_date'=>'2026-01-31','note'=>'','month'=>'January',  'fee_details'=>'[{"fee_name":"Admission Fee","amount":15000}]'],
-        ['id'=>47, 'student_id'=>42, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-01','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":2500}]'],
-        ['id'=>48, 'student_id'=>37, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-01','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (3 Shift)","amount":10000}]'],
-        ['id'=>49, 'student_id'=>2,  'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-02-02','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>50, 'student_id'=>15, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-02-02','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>51, 'student_id'=>25, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-02','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>54, 'student_id'=>2,  'payment_mode'=>'cash',          'payment_date'=>'2026-02-04','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>55, 'student_id'=>8,  'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-02-05','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
-        ['id'=>56, 'student_id'=>4,  'payment_mode'=>'cash',          'payment_date'=>'2026-02-05','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>58, 'student_id'=>24, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-05','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (3 Shift)","amount":10000}]'],
-        ['id'=>59, 'student_id'=>19, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-05','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>60, 'student_id'=>20, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-05','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":2500}]'],
-        ['id'=>61, 'student_id'=>18, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-05','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":4000}]'],
-        ['id'=>62, 'student_id'=>10, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-02-05','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>63, 'student_id'=>13, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-08','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>64, 'student_id'=>11, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-08','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>65, 'student_id'=>17, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-08','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
-        ['id'=>66, 'student_id'=>6,  'payment_mode'=>'cash',          'payment_date'=>'2026-02-07','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>67, 'student_id'=>16, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-08','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (2 Shift)","amount":8000}]'],
-        ['id'=>68, 'student_id'=>3,  'payment_mode'=>'cash',          'payment_date'=>'2026-02-08','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
-        ['id'=>69, 'student_id'=>35, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-02-08','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":5000},{"fee_name":"Hifz","amount":1000}]'],
-        ['id'=>70, 'student_id'=>33, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-09','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>71, 'student_id'=>16, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-02-08','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (2 Shift)","amount":8000}]'],
-        ['id'=>72, 'student_id'=>5,  'payment_mode'=>'cash',          'payment_date'=>'2026-02-10','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>73, 'student_id'=>14, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-11','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>74, 'student_id'=>43, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-15','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Admission Fee","amount":10000},{"fee_name":"Monthly Fee (1 Shift)","amount":4000}]'],
-        ['id'=>75, 'student_id'=>9,  'payment_mode'=>'cash',          'payment_date'=>'2026-02-15','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":5000},{"fee_name":"Hifz","amount":1500}]'],
-        ['id'=>76, 'student_id'=>21, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-15','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":4000}]'],
-        ['id'=>77, 'student_id'=>22, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-15','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":4000}]'],
-        ['id'=>78, 'student_id'=>7,  'payment_mode'=>'cash',          'payment_date'=>'2026-02-09','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>79, 'student_id'=>31, 'payment_mode'=>'cash',          'payment_date'=>'2026-02-12','note'=>'','month'=>'February', 'fee_details'=>'[{"fee_name":"Drawing & Crafting Fee","amount":4000},{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>80, 'student_id'=>18, 'payment_mode'=>'cash',          'payment_date'=>'2026-03-01','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>81, 'student_id'=>25, 'payment_mode'=>'cash',          'payment_date'=>'2026-03-02','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>82, 'student_id'=>2,  'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-03-02','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>83, 'student_id'=>15, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-03-02','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>84, 'student_id'=>13, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-03-02','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>85, 'student_id'=>23, 'payment_mode'=>'cash',          'payment_date'=>'2026-03-04','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>86, 'student_id'=>37, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-03-04','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (3 Shift)","amount":10000}]'],
-        ['id'=>87, 'student_id'=>35, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-03-04','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":5000},{"fee_name":"Hifz","amount":1000}]'],
-        ['id'=>88, 'student_id'=>24, 'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-03-04','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (3 Shift)","amount":10000}]'],
-        ['id'=>89, 'student_id'=>5,  'payment_mode'=>'cash',          'payment_date'=>'2026-03-05','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":5000}]'],
-        ['id'=>90, 'student_id'=>3,  'payment_mode'=>'cash',          'payment_date'=>'2026-03-05','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
-        ['id'=>91, 'student_id'=>36, 'payment_mode'=>'cash',          'payment_date'=>'2026-03-05','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Fee (1 Shift)","amount":4000}]'],
-        ['id'=>92, 'student_id'=>31, 'payment_mode'=>'cash',          'payment_date'=>'2026-03-05','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000},{"fee_name":"Hifz","amount":2000}]'],
-        ['id'=>93, 'student_id'=>8,  'payment_mode'=>'bank_transfer', 'payment_date'=>'2026-03-05','note'=>'','month'=>'March',    'fee_details'=>'[{"fee_name":"Monthly Tuition Fee","amount":8000}]'],
+        ['id'=>2,  'student_id'=>2,  'payment_mode'=>'Cash',         'payment_date'=>'2026-01-04', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":8000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":2000}]'],
+        ['id'=>3,  'student_id'=>3,  'payment_mode'=>'Cash',         'payment_date'=>'2026-01-04', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":8000}]'],
+        ['id'=>4,  'student_id'=>4,  'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":7000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":2000}]'],
+        ['id'=>5,  'student_id'=>5,  'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":5000}]'],
+        ['id'=>6,  'student_id'=>6,  'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":6500},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":2000}]'],
+        ['id'=>7,  'student_id'=>7,  'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":8000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":1000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":4000}]'],
+        ['id'=>8,  'student_id'=>8,  'payment_mode'=>'Bank',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":20000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":8000}]'],
+        ['id'=>9,  'student_id'=>9,  'payment_mode'=>'Cash',         'payment_date'=>'2026-01-07', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":22750},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":1000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":5500}]'],
+        ['id'=>10, 'student_id'=>10, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":6000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":1000}]'],
+        ['id'=>11, 'student_id'=>11, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":8000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":2000}]'],
+        ['id'=>13, 'student_id'=>13, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Exam Fee","type":"Half-Yearly","amount":5000},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":5000}]'],
+        ['id'=>14, 'student_id'=>14, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Exam Fee","type":"Half-Yearly","amount":5000},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":5000}]'],
+        ['id'=>15, 'student_id'=>15, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":1000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":8000}]'],
+        ['id'=>16, 'student_id'=>16, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-08', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Exam Fee","type":"Half-Yearly","amount":5000},{"name":"Monthly Fee (2 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":8000}]'],
+        ['id'=>17, 'student_id'=>17, 'payment_mode'=>'Bank',         'payment_date'=>'2026-01-11', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":8000}]'],
+        ['id'=>18, 'student_id'=>18, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-11', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":5000}]'],
+        ['id'=>19, 'student_id'=>19, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-11', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":7500},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":4000}]'],
+        ['id'=>20, 'student_id'=>20, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-11', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":7500},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":2500}]'],
+        ['id'=>21, 'student_id'=>21, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-09', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":4000},{"name":"Admission Fee","type":"One Time","amount":15000}]'],
+        ['id'=>22, 'student_id'=>22, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-09', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January","year":"26","amount":3000}]'],
+        ['id'=>23, 'student_id'=>23, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-11', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":5000}]'],
+        ['id'=>24, 'student_id'=>24, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-11', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Exam Fee","type":"Half-Yearly","amount":5000},{"name":"Monthly Fee (3 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":10000}]'],
+        ['id'=>25, 'student_id'=>25, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-11', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":5000}]'],
+        ['id'=>33, 'student_id'=>31, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-11', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":17500},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":1500},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":4000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":1000}]'],
+        ['id'=>35, 'student_id'=>33, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-13', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":5000}]'],
+        ['id'=>37, 'student_id'=>35, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-19', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":11000},{"name":"Drawing & Crafting Fee","type":"Half-Yearly","amount":4000},{"name":"Exam Fee","type":"Half-Yearly","amount":3000},{"name":"Monthly Tuition Fee - January, 26","type":"Monthly","month":"January, 26","amount":5000},{"name":"Hifz - January, 26","type":"Monthly","month":"January, 26","amount":1000}]'],
+        ['id'=>38, 'student_id'=>36, 'payment_mode'=>'Bank',         'payment_date'=>'2026-01-20', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":10000},{"name":"Monthly Fee (1 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":4000}]'],
+        ['id'=>39, 'student_id'=>37, 'payment_mode'=>'Bank',         'payment_date'=>'2026-01-22', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Exam Fee","type":"Half-Yearly","amount":5000},{"name":"Monthly Fee (3 Shift) - January, 26","type":"Monthly","month":"January, 26","amount":10000}]'],
+        ['id'=>41, 'student_id'=>39, 'payment_mode'=>'Bank',         'payment_date'=>'2026-02-01', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":35000},{"name":"Drawing & Crafting Fee - 1st Half","type":"Half-Yearly","amount":4000},{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February, 26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February, 26","amount":2000},{"name":"Exam Fee - 1st Half","type":"Half-Yearly","amount":3000}]'],
+        ['id'=>43, 'student_id'=>40, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-01', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000},{"name":"Monthly Fee (3 Shift) - February, 26","type":"Monthly","month":"February, 26","amount":10000}]'],
+        ['id'=>44, 'student_id'=>23, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-01', 'note'=>'', 'fee_details'=>'[{"name":"Exam Fee","type":"Half-Yearly","amount":5000}]'],
+        ['id'=>46, 'student_id'=>41, 'payment_mode'=>'Cash',         'payment_date'=>'2026-01-31', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":15000}]'],
+        ['id'=>47, 'student_id'=>42, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-01', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February, 26","amount":2500}]'],
+        ['id'=>48, 'student_id'=>37, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-01', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (3 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":10000}]'],
+        ['id'=>49, 'student_id'=>2,  'payment_mode'=>'Bank',         'payment_date'=>'2026-02-02', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>50, 'student_id'=>15, 'payment_mode'=>'Bank',         'payment_date'=>'2026-02-02', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>51, 'student_id'=>25, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-02', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":5000}]'],
+        ['id'=>54, 'student_id'=>2,  'payment_mode'=>'Cash',         'payment_date'=>'2026-02-04', 'note'=>'duplicate-skip', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>55, 'student_id'=>8,  'payment_mode'=>'Bank',         'payment_date'=>'2026-02-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000}]'],
+        ['id'=>56, 'student_id'=>4,  'payment_mode'=>'Cash',         'payment_date'=>'2026-02-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>58, 'student_id'=>24, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (3 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":10000}]'],
+        ['id'=>59, 'student_id'=>19, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":5000}]'],
+        ['id'=>60, 'student_id'=>20, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":5000}]'],
+        ['id'=>61, 'student_id'=>18, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":5000}]'],
+        ['id'=>62, 'student_id'=>10, 'payment_mode'=>'Bank',         'payment_date'=>'2026-02-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>63, 'student_id'=>13, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-08', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":5000}]'],
+        ['id'=>64, 'student_id'=>11, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-08', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>65, 'student_id'=>17, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-08', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000}]'],
+        ['id'=>66, 'student_id'=>6,  'payment_mode'=>'Cash',         'payment_date'=>'2026-02-07', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>67, 'student_id'=>16, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-08', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (2 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":8000}]'],
+        ['id'=>68, 'student_id'=>3,  'payment_mode'=>'Cash',         'payment_date'=>'2026-02-08', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000}]'],
+        ['id'=>69, 'student_id'=>35, 'payment_mode'=>'Bank',         'payment_date'=>'2026-02-08', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":5000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":1000}]'],
+        ['id'=>70, 'student_id'=>33, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-09', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":5000}]'],
+        ['id'=>71, 'student_id'=>16, 'payment_mode'=>'Bank',         'payment_date'=>'2026-02-08', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (2 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":8000}]'],
+        ['id'=>72, 'student_id'=>5,  'payment_mode'=>'Cash',         'payment_date'=>'2026-02-10', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":5000}]'],
+        ['id'=>73, 'student_id'=>14, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-11', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":5000}]'],
+        ['id'=>74, 'student_id'=>43, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-15', 'note'=>'', 'fee_details'=>'[{"name":"Admission Fee","type":"One Time","amount":10000},{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February, 26","amount":4000}]'],
+        ['id'=>75, 'student_id'=>9,  'payment_mode'=>'Cash',         'payment_date'=>'2026-02-15', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":5000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":1500}]'],
+        ['id'=>76, 'student_id'=>21, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-15', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":4000}]'],
+        ['id'=>77, 'student_id'=>22, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-15', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - February, 26","type":"Monthly","month":"February","year":"26","amount":4000}]'],
+        ['id'=>78, 'student_id'=>7,  'payment_mode'=>'Cash',         'payment_date'=>'2026-02-09', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>79, 'student_id'=>31, 'payment_mode'=>'Cash',         'payment_date'=>'2026-02-12', 'note'=>'', 'fee_details'=>'[{"name":"Drawing & Crafting Fee - February, 26","type":"Half-Yearly","month":"February","year":"26","amount":4000},{"name":"Monthly Tuition Fee - February, 26","type":"Monthly","month":"February","year":"26","amount":8000},{"name":"Hifz - February, 26","type":"Monthly","month":"February","year":"26","amount":2000}]'],
+        ['id'=>80, 'student_id'=>18, 'payment_mode'=>'Cash',         'payment_date'=>'2026-03-01', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":5000}]'],
+        ['id'=>81, 'student_id'=>25, 'payment_mode'=>'Cash',         'payment_date'=>'2026-03-02', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":5000}]'],
+        ['id'=>82, 'student_id'=>2,  'payment_mode'=>'Bank',         'payment_date'=>'2026-03-02', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - March, 26","type":"Monthly","month":"March","year":"26","amount":8000},{"name":"Hifz - March, 26","type":"Monthly","month":"March","year":"26","amount":2000}]'],
+        ['id'=>83, 'student_id'=>15, 'payment_mode'=>'Bank',         'payment_date'=>'2026-03-02', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - March, 26","type":"Monthly","month":"March","year":"26","amount":8000},{"name":"Hifz - March, 26","type":"Monthly","month":"March","year":"26","amount":2000}]'],
+        ['id'=>84, 'student_id'=>13, 'payment_mode'=>'Bank',         'payment_date'=>'2026-03-02', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":5000}]'],
+        ['id'=>85, 'student_id'=>23, 'payment_mode'=>'Cash',         'payment_date'=>'2026-03-04', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":5000}]'],
+        ['id'=>86, 'student_id'=>37, 'payment_mode'=>'Bank',         'payment_date'=>'2026-03-04', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (3 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":10000}]'],
+        ['id'=>87, 'student_id'=>35, 'payment_mode'=>'Bank',         'payment_date'=>'2026-03-04', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - March, 26","type":"Monthly","month":"March","year":"26","amount":5000},{"name":"Hifz - March, 26","type":"Monthly","month":"March","year":"26","amount":1000}]'],
+        ['id'=>88, 'student_id'=>24, 'payment_mode'=>'Bank',         'payment_date'=>'2026-03-04', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (3 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":10000}]'],
+        ['id'=>89, 'student_id'=>5,  'payment_mode'=>'Cash',         'payment_date'=>'2026-03-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":5000}]'],
+        ['id'=>90, 'student_id'=>3,  'payment_mode'=>'Cash',         'payment_date'=>'2026-03-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - March, 26","type":"Monthly","month":"March","year":"26","amount":8000}]'],
+        ['id'=>91, 'student_id'=>36, 'payment_mode'=>'Cash',         'payment_date'=>'2026-03-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Fee (1 Shift) - March, 26","type":"Monthly","month":"March","year":"26","amount":4000}]'],
+        ['id'=>92, 'student_id'=>31, 'payment_mode'=>'Cash',         'payment_date'=>'2026-03-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - March, 26","type":"Monthly","month":"March","year":"26","amount":8000},{"name":"Hifz - March, 26","type":"Monthly","month":"March","year":"26","amount":2000}]'],
+        ['id'=>93, 'student_id'=>8,  'payment_mode'=>'Bank',         'payment_date'=>'2026-03-05', 'note'=>'', 'fee_details'=>'[{"name":"Monthly Tuition Fee - March, 26","type":"Monthly","month":"March","year":"26","amount":8000}]'],
     ];
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Internal maps built during migration
-    // ─────────────────────────────────────────────────────────────────────
-    private array $classMap   = [];  // old classroom.id  → new classes.id
-    private array $sectionMap = [];  // "oldClassId:Name" → new section.id
-    private array $studentMap = [];  // old student.id    → new student.id
-    private array $feeMap     = [];  // "newClassId:feeName" → new fee_structure.id
+    // ──────────────────────────────────────────────────────────────────────
+    // Internal maps (built during migration)
+    // ──────────────────────────────────────────────────────────────────────
+    private array $classMap   = [];  // old class_id  → new classes.id
+    private array $sectionMap = [];  // "oldClassId:SectionName" → new sections.id
+    private array $studentMap = [];  // old student.id → new students.id
+    private array $feeMap     = [];  // "newClassId:feeName" → fee_structures.id
 
-    // ─────────────────────────────────────────────────────────────────────
-    // FIX 1: "One Time" added — this was missing in the original seeder
-    // causing Admission Fee frequency to silently default to 'one_time'
-    // only by fallback. Now explicit.
-    // ─────────────────────────────────────────────────────────────────────
     private array $FREQ_MAP = [
-        'One Time'    => 'one_time',    // ← NEW — used by new selected_fees format
+        'One Time'    => 'one_time',
         'Monthly'     => 'monthly',
         'Quarterly'   => 'quarterly',
         'Half-Yearly' => 'half_yearly',
-        'Half Yearly' => 'half_yearly', // ← extra alias just in case
+        'Half Yearly' => 'half_yearly',
         'Yearly'      => 'yearly',
     ];
 
-    private array $ROLE_MAP = [
-        'admin'            => 'Admin',
-        'admission_office' => 'Admission Office',
+    private array $MONTH_MAP = [
+        'January'=>1, 'February'=>2, 'March'=>3,    'April'=>4,
+        'May'=>5,     'June'=>6,     'July'=>7,      'August'=>8,
+        'September'=>9,'October'=>10,'November'=>11, 'December'=>12,
     ];
 
-    // ─────────────────────────────────────────────────────────────────────
-    // FIX 2: payment_mode normalisation
-    // Old data uses 'cash' / 'bank_transfer' (already lowercase snake_case)
-    // New payments table enum: ['cash','bank_transfer','online','cheque','card']
-    // The map below also handles any future mixed-case values from the new CSV.
-    // ─────────────────────────────────────────────────────────────────────
     private array $PAYMENT_METHOD_MAP = [
         'cash'          => 'cash',
         'Cash'          => 'cash',
         'bank_transfer' => 'bank_transfer',
         'Bank Transfer' => 'bank_transfer',
-        'bank transfer' => 'bank_transfer',
+        'Bank'          => 'bank_transfer',
+        'bank'          => 'bank_transfer',
         'online'        => 'online',
         'Online'        => 'online',
         'cheque'        => 'cheque',
@@ -266,45 +372,52 @@ class OldDataMigrationSeeder extends Seeder
         'Card'          => 'card',
     ];
 
-    // ─────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
 
     public function run(): void
     {
-        $this->command->info('Starting old-project data migration…');
+        $this->command->info('═══════════════════════════════════════════════');
+        $this->command->info('  Al-Akhirah Academy — Old Data Migration');
+        $this->command->info('═══════════════════════════════════════════════');
 
         DB::transaction(function () {
-            $this->step0_wipeData();          // Problem 5: idempotency wipe
+            $this->step0_wipeData();
             $this->step1_migrateUsers();
-            $this->step2_migrateClasses();
-            $this->step3_migrateSections();
-            $this->step4_migrateFeeStructures();
+            $this->step2_buildClassMap();
+            $this->step3_buildSectionMap();
+            $this->step4_buildFeeMap();
             $this->step5_migrateStudents();
-            $this->step6_migrateStudentFeeAssignments();
+            $this->step6_migrateFeeAssignments();
             $this->step7_migratePayments();
         });
 
-        $this->command->info('Migration complete!');
+        $this->command->info('');
+        $this->command->info('✓ Migration complete!');
+        $this->command->info('');
+        $this->command->info('Verify with:');
+        $this->command->info('  SELECT student_id FROM students LIMIT 5;');
+        $this->command->info('  SELECT COUNT(*) FROM payments WHERE fee_structure_id IS NULL;');
+        $this->command->info('  SELECT COUNT(*) FROM payments WHERE billing_month IS NULL AND fee_type NOT LIKE "%Admission%";');
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 0 — Wipe (idempotency)
-    // Clears students/payments/fee-assignments so the seeder can be re-run
-    // safely. Classes, sections, and fee_structures are left intact.
-    // ─────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
+    // STEP 0 — Wipe migrated data (keep classes, sections, fee_structures)
+    // ──────────────────────────────────────────────────────────────────────
     private function step0_wipeData(): void
     {
-        $this->command->info('[0/7] Wiping existing migrated data…');
+        $this->command->info('[0/7] Wiping existing student/payment data…');
 
         StudentFeeAssignment::query()->delete();
         Payment::query()->delete();
+        // Use forceDelete to also remove soft-deleted students
         Student::withTrashed()->forceDelete();
 
-        $this->command->info('  → Wipe complete. Classes/sections/fee_structures preserved.');
+        $this->command->info('  → Wiped. Classes, sections, fee_structures preserved.');
     }
 
-    // ─────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
     // STEP 1 — Users
-    // ─────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
     private function step1_migrateUsers(): void
     {
         $this->command->info('[1/7] Migrating users…');
@@ -319,88 +432,78 @@ class OldDataMigrationSeeder extends Seeder
                 ]
             );
 
-            $newRole = $this->ROLE_MAP[$old['role']] ?? null;
-            if ($newRole) {
+            if (!empty($old['role'])) {
                 \Spatie\Permission\Models\Role::firstOrCreate(
-                    ['name' => $newRole, 'guard_name' => 'web']
+                    ['name' => $old['role'], 'guard_name' => 'web']
                 );
-                $user->syncRoles([$newRole]);
+                $user->syncRoles([$old['role']]);
             }
         }
 
-        $this->command->info('  → ' . count($this->OLD_USERS) . ' users migrated.');
+        $this->command->info('  → ' . count($this->OLD_USERS) . ' users ready.');
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 2 — Classrooms → Classes
-    // ─────────────────────────────────────────────────────────────────────
-    private function step2_migrateClasses(): void
+    // ──────────────────────────────────────────────────────────────────────
+    // STEP 2 — Build classMap  (old classroom id → new classes.id)
+    // Classes already exist in DB with codes 786/110/111/112.
+    // ──────────────────────────────────────────────────────────────────────
+    private function step2_buildClassMap(): void
     {
-        $this->command->info('[2/7] Migrating classrooms → classes…');
+        $this->command->info('[2/7] Building class map…');
 
         foreach ($this->OLD_CLASSROOMS as $old) {
             $class = Classes::updateOrCreate(
-                ['code' => strtoupper($old['class_id'])],
+                ['code' => $old['code']],
                 [
                     'name'          => $old['name'],
-                    'capacity'      => $old['max_students_per_section'] ?? 40,
-                    'academic_year' => date('Y'),
+                    'capacity'      => 40,
+                    'academic_year' => '2026',
                     'is_active'     => true,
                 ]
             );
-
             $this->classMap[$old['id']] = $class->id;
         }
 
-        $this->command->info('  → ' . count($this->OLD_CLASSROOMS) . ' classes migrated.');
+        $this->command->info('  → classMap built: ' . json_encode($this->classMap));
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 3 — Sections
-    // ─────────────────────────────────────────────────────────────────────
-    private function step3_migrateSections(): void
+    // ──────────────────────────────────────────────────────────────────────
+    // STEP 3 — Build sectionMap ("oldClassId:Name" → sections.id)
+    // ──────────────────────────────────────────────────────────────────────
+    private function step3_buildSectionMap(): void
     {
-        $this->command->info('[3/7] Migrating sections…');
+        $this->command->info('[3/7] Building section map…');
 
-        $count = 0;
         foreach ($this->OLD_CLASSROOMS as $old) {
             $newClassId = $this->classMap[$old['id']] ?? null;
-            if (! $newClassId) continue;
+            if (!$newClassId) continue;
 
-            $sectionNames = json_decode($old['sections'] ?? '[]', true) ?? [];
-
-            foreach ($sectionNames as $sectionName) {
+            foreach ($old['sections'] as $sectionName) {
                 $section = Section::firstOrCreate(
                     ['class_id' => $newClassId, 'name' => $sectionName],
-                    ['capacity' => $old['max_students_per_section'] ?? 40]
+                    ['capacity' => 40]
                 );
-
                 $this->sectionMap[$old['id'] . ':' . $sectionName] = $section->id;
-                $count++;
             }
         }
 
-        $this->command->info("  → {$count} sections migrated.");
+        $this->command->info('  → sectionMap built with ' . count($this->sectionMap) . ' entries.');
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // STEP 4 — FeeStructures
-    // Reads fees from the old classroom JSON array + the admission_fee field.
-    // This step is unchanged from the original — the classroom data format
-    // is the same in old and new exports.
-    // ─────────────────────────────────────────────────────────────────────
-    private function step4_migrateFeeStructures(): void
+    // ──────────────────────────────────────────────────────────────────────
+    // STEP 4 — Build feeMap ("newClassId:feeName" → fee_structures.id)
+    // ──────────────────────────────────────────────────────────────────────
+    private function step4_buildFeeMap(): void
     {
-        $this->command->info('[4/7] Migrating fee structures…');
+        $this->command->info('[4/7] Building fee structure map…');
 
         $count = 0;
         foreach ($this->OLD_CLASSROOMS as $old) {
             $newClassId = $this->classMap[$old['id']] ?? null;
-            if (! $newClassId) continue;
+            if (!$newClassId) continue;
 
-            // Regular fees (Monthly, Half-Yearly, etc.)
-            $fees = json_decode($old['fees'] ?? '[]', true) ?? [];
-            foreach ($fees as $fee) {
+            // Regular fees
+            foreach ($old['fees'] as $fee) {
                 $frequency = $this->FREQ_MAP[$fee['type'] ?? ''] ?? 'one_time';
 
                 $fs = FeeStructure::firstOrCreate(
@@ -411,7 +514,7 @@ class OldDataMigrationSeeder extends Seeder
                     ],
                     [
                         'amount'        => $fee['amount'],
-                        'academic_year' => date('Y'),
+                        'academic_year' => '2026',
                         'is_mandatory'  => true,
                     ]
                 );
@@ -420,8 +523,8 @@ class OldDataMigrationSeeder extends Seeder
                 $count++;
             }
 
-            // Admission fee (separate field on old classroom)
-            if (! empty($old['admission_fee'])) {
+            // Admission fee
+            if (!empty($old['admission_fee'])) {
                 $fs = FeeStructure::firstOrCreate(
                     [
                         'class_id'  => $newClassId,
@@ -430,7 +533,7 @@ class OldDataMigrationSeeder extends Seeder
                     ],
                     [
                         'amount'        => $old['admission_fee'],
-                        'academic_year' => date('Y'),
+                        'academic_year' => '2026',
                         'is_mandatory'  => true,
                     ]
                 );
@@ -440,71 +543,108 @@ class OldDataMigrationSeeder extends Seeder
             }
         }
 
-        $this->command->info("  → {$count} fee structures migrated.");
+        $this->command->info("  → feeMap built with {$count} entries.");
     }
 
-    // ─────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
     // STEP 5 — Students
-    // ─────────────────────────────────────────────────────────────────────
+    //
+    // student_id format: '26' + class_code + str_pad(old_id, 3, '0', STR_PAD_LEFT)
+    // e.g. old_id=6, class=Play(111) → '26111006'
+    // ──────────────────────────────────────────────────────────────────────
     private function step5_migrateStudents(): void
     {
         $this->command->info('[5/7] Migrating students…');
 
-        // Problem 1: Build class-code lookup for student_id formula
-        $classCodeMap = [];
-        foreach ($this->OLD_CLASSROOMS as $classroom) {
-            $classCodeMap[$classroom['id']] = $classroom['class_id']; // e.g. 1 => '786'
-        }
-
-        // Problem 7: Pre-index earliest payment date per old student_id
-        $earliestPayment = [];
+        // Pre-build earliest payment date per old student_id for enrollment_date
+        $enrollmentDates = [];
         foreach ($this->OLD_PAYMENTS as $p) {
-            $sid  = $p['student_id'];
-            $date = $p['payment_date'] ?? null;
-            if ($date && (!isset($earliestPayment[$sid]) || $date < $earliestPayment[$sid])) {
-                $earliestPayment[$sid] = $date;
+            $sid = $p['student_id'];
+            $date = $p['payment_date'];
+            if (!isset($enrollmentDates[$sid]) || $date < $enrollmentDates[$sid]) {
+                $enrollmentDates[$sid] = $date;
             }
         }
 
+        // ── Hardcoded student_id map from old system screenshots ──────────
+        // The suffix is the sequential enrollment rank within each class
+        // (including deleted students), NOT the database id.
+        // Duplicates (26111001, 26111002) existed in the old system — preserved as-is.
+        $studentIdMap = [
+            2  => '26111001',  // MAISARAH HAMMANAH KABIR       - Play  (enrolled first, keeps original)
+            3  => '26112001',  // AJWAD AHMAD                   - Kg
+            4  => '26111002',  // Abdullah Al Ifrad             - Play  (enrolled first, keeps original)
+            5  => '26786001',  // AMAYRA AFEEF                  - Hifz
+            6  => '26111003',  // ALFIDA KAMAL MARYAM           - Play  (was duplicate 26111001, assigned next available)
+            7  => '26110003',  // AHNAF RAHMAN FUAD             - Pre-Play
+            8  => '26112002',  // IBSAN BIN ZAMAN               - Kg
+            9  => '26110004',  // ABDUR RAHMAN TAIMOOR          - Pre-Play
+            10 => '26111004',  // ALEENA RAHMAN                 - Play  (was duplicate 26111002, assigned next available)
+            11 => '26110005',  // Amanah Faryat Radiya          - Pre-Play
+            13 => '26786002',  // Ammar Yousuf Khan             - Hifz
+            14 => '26786003',  // Ammar Bin Nazib               - Hifz
+            15 => '26110006',  // MUAAZ ZAHRAN KABIR            - Pre-Play
+            16 => '26786004',  // FATIMA JANNAH                 - Hifz
+            17 => '26110007',  // MUHSINAT SAMAYRA              - Pre-Play
+            18 => '26786005',  // AZEEBA RAHMAN AZRA            - Hifz
+            19 => '26786006',  // MOHAMMAD AYMAN RAHMAN ABDULLA - Hifz
+            20 => '26786007',  // MOHAMMAD ABDUR RAHMAN ASIM    - Hifz
+            21 => '26786008',  // SYEDA FATIMA ASEEF NOURAN     - Hifz
+            22 => '26786009',  // SYED FAIZAAN BIN ASEEF        - Hifz
+            23 => '26786010',  // SAMEEHA KAREEM                - Hifz
+            24 => '26786011',  // NUSAYBA SHADLEEN ANAYA        - Hifz
+            25 => '26786012',  // MD.RUSHDAN JUBRAN             - Hifz
+            31 => '26112003',  // FATEEMAH FIYANA MAHMUD        - Kg
+            33 => '26786013',  // Tania Binte Wahed             - Hifz
+            35 => '26110008',  // UMAR IBN ABDULLAH             - Pre-Play
+            36 => '26786014',  // ALVI AYAAN                    - Hifz
+            37 => '26786015',  // TAHRIKA TASKIN                - Hifz
+            39 => '26111006',  // FAATIMAH MUHAMMAD RAHIM       - Play
+            40 => '26786016',  // SAFIYYAH BINT TAREQ           - Hifz
+            41 => '26786017',  // AJMAEEN FAIEQ RAHMAN          - Hifz
+            42 => '26786018',  // AMAAN MAHROOZ RAHMAN          - Hifz
+            43 => '26786019',  // TANZINA TABASSHUM             - Hifz
+        ];
+
         foreach ($this->OLD_STUDENTS as $old) {
+            $newClassId   = $this->classMap[$old['class_id']] ?? null;
+            $newSectionId = $this->sectionMap[$old['class_id'] . ':' . ($old['section'] ?? '')] ?? null;
+
+            // ── Correct student_id from hardcoded map ──────────────────
+            $studentId = $studentIdMap[$old['id']] ?? null;
+            if (!$studentId) {
+                $this->command->error("  ✗ No student_id mapped for old id={$old['id']} ({$old['name']}) — skipping.");
+                continue;
+            }
+
+            // ── Name split ────────────────────────────────────────────
             $nameParts = explode(' ', trim($old['name']), 2);
             $firstName = $nameParts[0];
             $lastName  = $nameParts[1] ?? '';
 
-            $newSectionId = $this->sectionMap[$old['class_id'] . ':' . ($old['section'] ?? '')] ?? null;
-            $newClassId   = $this->classMap[$old['class_id']] ?? null;
-
-            // Problem 1: Correct student_id format: '26' + classCode + zero-padded old id
-            $classCode = $classCodeMap[$old['class_id']] ?? '000';
-            $studentId = '26' . $classCode . str_pad($old['id'], 3, '0', STR_PAD_LEFT);
-
-            // Problem 7: Derive enrollment_date from earliest payment date
-            $enrollmentDate = $earliestPayment[$old['id']]
-                ?? $old['enrollment_date']
-                ?? date('Y') . '-01-01';
+            // ── Enrollment date from earliest payment ─────────────────
+            $enrollmentDate = $enrollmentDates[$old['id']] ?? '2026-01-01';
 
             $student = Student::updateOrCreate(
                 ['student_id' => $studentId],
                 [
-                    'first_name'     => $firstName,
-                    'last_name'      => $lastName,
-                    'date_of_birth'  => !empty($old['dob']) ? $old['dob'] : '2010-01-01',
-                    'gender'         => strtolower($old['gender'] ?? 'male'),
-                    'email'          => !empty($old['email']) ? $old['email'] : null,
-                    'phone'          => !empty($old['father_mobile']) ? $old['father_mobile'] : '00000000000',
-                    'address'        => $old['address'] ?? null,
-                    // Problem 8: guardian_name maps to father_name; also store father/mother explicitly
-                    'guardian_name'  => $old['father_name'] ?? '',
-                    'guardian_phone' => $old['father_mobile'] ?? '',
-                    'father_name'    => $old['father_name'] ?? '',
-                    'mother_name'    => $old['mother_name'] ?? '',
-                    'mother_mobile'  => $old['mother_mobile'] ?? '',
-                    'class_id'       => $newClassId,
-                    'section_id'     => $newSectionId,
-                    'enrollment_date'=> $enrollmentDate,
-                    'status'         => $old['status'] ?? 'active',
-                    'program_type'   => $old['program_type'] ?? null,
-                    'shift'          => $old['shift'] ?? null,
+                    'first_name'      => $firstName,
+                    'last_name'       => $lastName,
+                    'date_of_birth'   => !empty($old['dob']) ? $old['dob'] : '2000-01-01',
+                    'gender'          => strtolower($old['gender'] ?? 'male'),
+                    'address'         => $old['address'] ?? null,
+                    'guardian_name'   => $old['father_name'] ?? '',
+                    'guardian_phone'  => $old['father_mobile'] ?? '',
+                    'father_name'     => $old['father_name'] ?? '',
+                    'mother_name'     => $old['mother_name'] ?? '',
+                    'mother_mobile'   => $old['mother_mobile'] ?? '',
+                    'phone'           => $old['father_mobile'] ?? '',
+                    'program_type'    => $old['program_type'] ?? '',
+                    'shift'           => $old['shift'] ?? 'Morning',
+                    'class_id'        => $newClassId,
+                    'section_id'      => $newSectionId,
+                    'enrollment_date' => $enrollmentDate,
+                    'status'          => 'active',
                 ]
             );
 
@@ -514,82 +654,70 @@ class OldDataMigrationSeeder extends Seeder
         $this->command->info('  → ' . count($this->OLD_STUDENTS) . ' students migrated.');
     }
 
-    // ─────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
     // STEP 6 — StudentFeeAssignments
-    //
-    // FIX A: selected_fees key changed from "fee_name" (old) → "name" (new)
-    //        Handled with:  $sel['fee_name'] ?? $sel['name'] ?? ''
-    //
-    // FIX B: discounts field changed format between old and new:
-    //   OLD (array):   [{"fee_name":"X","discount_type":"fixed","value":Y}]
-    //   NEW (object):  {"X":{"amount":Y,"permanent":0|1}}
-    //        Handled by detecting array_is_list() and normalising to a
-    //        common structure before processing.
-    // ─────────────────────────────────────────────────────────────────────
-    private function step6_migrateStudentFeeAssignments(): void
+    // ──────────────────────────────────────────────────────────────────────
+    private function step6_migrateFeeAssignments(): void
     {
-        $this->command->info('[6/7] Migrating student fee assignments…');
+        $this->command->info('[6/7] Migrating fee assignments…');
 
         $count = 0;
+        $skipped = 0;
+
         foreach ($this->OLD_STUDENTS as $old) {
             $newStudentId = $this->studentMap[$old['id']] ?? null;
             $newClassId   = $this->classMap[$old['class_id']] ?? null;
-            if (! $newStudentId || ! $newClassId) continue;
+            if (!$newStudentId || !$newClassId) continue;
 
             $selectedFees = json_decode($old['selected_fees'] ?? '[]', true) ?? [];
             $rawDiscounts = json_decode($old['discounts']     ?? '[]', true) ?? [];
 
-            // ── Normalise discount lookup keyed by fee name ──────────────
-            // Supports BOTH old array format AND new keyed-object format.
+            // Normalise discounts into keyed map by fee name
             $discountMap = [];
-
-            if (is_array($rawDiscounts) && ! empty($rawDiscounts)) {
-                if (array_is_list($rawDiscounts)) {
-                    // OLD format: [{fee_name, discount_type, value, is_permanent?}]
+            if (!empty($rawDiscounts)) {
+                if (is_array($rawDiscounts) && array_is_list($rawDiscounts)) {
+                    // Old array format: [{"fee_name":"X","discount_type":"fixed","value":Y}]
                     foreach ($rawDiscounts as $d) {
                         $key = $d['fee_name'] ?? '';
                         if ($key === '') continue;
                         $discountMap[$key] = [
                             'discount_type' => $d['discount_type'] ?? 'fixed',
-                            'value'         => (float) ($d['value'] ?? 0),
-                            'is_permanent'  => (bool) ($d['is_permanent'] ?? false),
+                            'value'         => (float)($d['value'] ?? 0),
+                            'is_permanent'  => (bool)($d['is_permanent'] ?? false),
                         ];
                     }
                 } else {
-                    // NEW format: {"FeeName": {"amount": X, "permanent": 0|1}}
+                    // New object format: {"FeeName":{"amount":X,"permanent":0|1}}
                     foreach ($rawDiscounts as $feeName => $d) {
                         $discountMap[$feeName] = [
                             'discount_type' => 'fixed',
-                            'value'         => (float) ($d['amount'] ?? 0),
-                            'is_permanent'  => (bool) ($d['permanent'] ?? false),
+                            'value'         => (float)($d['amount'] ?? 0),
+                            'is_permanent'  => (bool)($d['permanent'] ?? false),
                         ];
                     }
                 }
             }
-            // ────────────────────────────────────────────────────────────
 
             foreach ($selectedFees as $sel) {
-                // FIX A: support both "fee_name" (old) and "name" (new)
-                $feeName  = $sel['fee_name'] ?? $sel['name'] ?? '';
+                $feeName  = $sel['name'] ?? $sel['fee_name'] ?? '';
                 $feeKey   = $newClassId . ':' . $feeName;
                 $newFeeId = $this->feeMap[$feeKey] ?? null;
 
-                if (! $newFeeId) {
-                    $this->command->warn("    ⚠ FeeStructure not found for: [{$feeKey}] — skipping assignment.");
+                if (!$newFeeId) {
+                    $this->command->warn("    ⚠ Fee not found: [{$feeKey}] for student id={$old['id']} — skipping.");
+                    $skipped++;
                     continue;
                 }
 
-                // Prefer structured discount from $discountMap,
-                // fall back to inline discount value from selected_fees
-                $disc          = $discountMap[$feeName] ?? [];
-                $inlineDisc    = (float) ($sel['discount'] ?? 0);
-                $discountType  = match ($disc['discount_type'] ?? 'none') {
+                $disc         = $discountMap[$feeName] ?? [];
+                $inlineDisc   = (float)($sel['discount'] ?? 0);
+                $discountType = match ($disc['discount_type'] ?? 'none') {
                     'percentage' => 'percentage',
                     'fixed'      => 'fixed',
                     default      => $inlineDisc > 0 ? 'fixed' : 'none',
                 };
-                $discountValue = (float) ($disc['value'] ?? $inlineDisc);
-                $isPermanent   = (bool)  ($disc['is_permanent'] ?? $sel['is_permanent'] ?? false);
+                $discountValue = (float)($disc['value'] ?? $inlineDisc);
+                $isPermanent   = (bool)($disc['is_permanent'] ?? $sel['is_permanent'] ?? false);
 
                 StudentFeeAssignment::firstOrCreate(
                     [
@@ -607,111 +735,153 @@ class OldDataMigrationSeeder extends Seeder
             }
         }
 
-        $this->command->info("  → {$count} fee assignments migrated.");
+        $this->command->info("  → {$count} fee assignments migrated. {$skipped} skipped (fee not found).");
     }
 
-    // ─────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
     // STEP 7 — Payments
     //
-    // FIX A: fee_details items use "fee_name" key in old data.
-    //        New data uses "name".  Handled with null-coalescing.
+    // Each old payment row may contain multiple fee_details items.
+    // These are SPLIT into individual Payment rows — one per fee line.
     //
-    // FIX B: New payments table has NO billing_month / billing_year columns.
-    //        Those fields are removed from the insert.
+    // CRITICAL fields set on every row:
+    //   • fee_structure_id  — looked up via feeMap
+    //   • billing_month     — integer 1-12 (null for one-time fees)
+    //   • billing_year      — e.g. 2026
     //
-    // FIX C: Monthly fee names in new data carry a month suffix:
-    //        "Monthly Tuition Fee - January, 26"
-    //        We strip the suffix before writing fee_type so the value
-    //        matches the FeeStructure fee_type exactly.
-    //
-    // FIX D: payment_method normalised through $PAYMENT_METHOD_MAP.
-    //
-    // FIX E: Billing month logic refined:
-    //        1. Resolve fee_structure_id FIRST, then use its frequency.
-    //        2. One-time fees always get billing_month=null.
-    //        3. Half-yearly fees get billing_month=6 or 12 based on payment month.
-    //        4. Monthly fees use the payment's month directly.
-    // ─────────────────────────────────────────────────────────────────────
+    // billing_month for half-yearly fees:
+    //   All 2026 data is from Jan-Mar → H1 → billing_month = 6
+    // ──────────────────────────────────────────────────────────────────────
     private function step7_migratePayments(): void
     {
         $this->command->info('[7/7] Migrating payments…');
 
-        // Problem 2: Month name → integer
-        $monthMap = [
-            'January'=>1,'February'=>2,'March'=>3,'April'=>4,
-            'May'=>5,'June'=>6,'July'=>7,'August'=>8,
-            'September'=>9,'October'=>10,'November'=>11,'December'=>12,
-        ];
+        $count   = 0;
+        $skipped = 0;
 
-        $count = 0;
+        // Track seen receipt+feetype combos to handle true duplicates
+        // (e.g. payment ids 49 & 54 — same student, same month, same fee)
+        $seen = [];
+
         foreach ($this->OLD_PAYMENTS as $old) {
             $newStudentId = $this->studentMap[$old['student_id']] ?? null;
-            if (!$newStudentId) continue;
+            if (!$newStudentId) {
+                $this->command->warn("    ⚠ Student old_id={$old['student_id']} not found — skipping payment id={$old['id']}.");
+                $skipped++;
+                continue;
+            }
 
-            // Need the student's class_id for feeMap lookup
+            // Get the student's new class_id for fee lookup
             $student    = Student::find($newStudentId);
-            $newClassId = $student->class_id ?? null;
+            $newClassId = $student?->class_id;
 
-            $receiptBase   = 'MIG-' . str_pad($old['id'], 5, '0', STR_PAD_LEFT);
-            $paymentMethod = $this->PAYMENT_METHOD_MAP[$old['payment_mode'] ?? ''] ?? 'cash';
-            $paymentDate   = $old['payment_date'] ?? now()->toDateString();
-            $paymentCarbon = Carbon::parse($paymentDate);
-            $paymentMonth  = $paymentCarbon->month;
-            $paymentYear   = $paymentCarbon->year;
+            $paymentMethod = $this->PAYMENT_METHOD_MAP[$old['payment_mode'] ?? 'Cash'] ?? 'cash';
+            $paymentDate   = $old['payment_date'];
+            $paymentYear   = (int) Carbon::parse($paymentDate)->format('Y');
 
             $feeDetails = json_decode($old['fee_details'] ?? '[]', true) ?? [];
             if (empty($feeDetails)) {
-                // Fallback for payments without detailed fee breakdown
-                $feeDetails = [['fee_name' => 'Fee', 'amount' => $old['amount'] ?? 0]];
+                $skipped++;
+                continue;
             }
 
-            foreach ($feeDetails as $idx => $item) {
-                // Support both "fee_name" (old data) and "name" (new data)
-                $rawName = $item['fee_name'] ?? $item['name'] ?? 'Fee';
+            // Receipt matches old system: '26' + MMDD + padded old payment id
+            // e.g. id=93, date=2026-03-05 → '260305093'
+            $mmdd        = Carbon::parse($paymentDate)->format('md');
+            $receiptBase = '26' . $mmdd . str_pad($old['id'], 3, '0', STR_PAD_LEFT);
 
-                // Strip " - Month, YY" suffix  e.g. "Monthly Tuition Fee - January, 26" → "Monthly Tuition Fee"
-                $cleanName = preg_replace('/\s*-\s*[A-Za-z]+,?\s*\d{2,4}$/', '', $rawName);
+            foreach ($feeDetails as $idx => $item) {
+                $rawName = $item['name'] ?? $item['fee_name'] ?? 'Unknown Fee';
+
+                // Strip " - Month, YY" or " - Month YY" suffix to get clean fee name
+                // e.g. "Monthly Tuition Fee - January, 26" → "Monthly Tuition Fee"
+                // e.g. "Drawing & Crafting Fee - 1st Half"  → "Drawing & Crafting Fee"
+                $cleanName = preg_replace('/\s*-\s*.+$/', '', $rawName);
                 $cleanName = trim($cleanName);
 
-                $feeStructureId = null;
-                $feeFrequency   = null;
-                if ($newClassId) {
-                    $feeStructureId = $this->feeMap[$newClassId . ':' . $cleanName] ?? null;
-                    if ($feeStructureId) {
-                        $feeStructure = FeeStructure::find($feeStructureId);
-                        $feeFrequency = $feeStructure->frequency ?? null;
+                $itemType = $item['type'] ?? '';
+                $amount   = (float)($item['amount'] ?? 0);
+
+                if ($amount <= 0) {
+                    // Skip zero-amount lines (can happen with data anomalies)
+                    continue;
+                }
+
+                // ── Determine billing_month and billing_year ───────────
+                $billingMonth = null;
+                $billingYear  = $paymentYear;
+
+                if ($itemType === 'One Time') {
+                    // Admission / one-time fees have no billing month
+                    $billingMonth = null;
+                } elseif ($itemType === 'Half-Yearly') {
+                    // H1 = billing_month 6, H2 = billing_month 12
+                    // All current data is Jan-Mar 2026 → H1
+                    $billingMonth = 6;
+                    $billingYear  = $paymentYear;
+                } else {
+                    // Monthly — extract month from item or fall back to payment date
+                    $monthStr = $item['month'] ?? null;
+
+                    if ($monthStr) {
+                        // month field may be "January, 26" or "January" or "February"
+                        // Extract just the month name (first word)
+                        $monthName = trim(explode(',', $monthStr)[0]);
+                        $billingMonth = $this->MONTH_MAP[$monthName] ?? null;
+
+                        // Year: prefer item['year'] field, else from month suffix, else payment date
+                        if (!empty($item['year'])) {
+                            $yr = trim($item['year']);
+                            $billingYear = strlen($yr) === 2 ? (int)('20' . $yr) : (int)$yr;
+                        } elseif (strpos($monthStr, ',') !== false) {
+                            // "January, 26" format — extract year after comma
+                            $parts = explode(',', $monthStr);
+                            $yr = trim($parts[1] ?? '');
+                            if ($yr !== '') {
+                                $billingYear = strlen($yr) === 2 ? (int)('20' . $yr) : (int)$yr;
+                            }
+                        }
                     } else {
-                        $this->command->warn("    ⚠ FeeStructure not found for: [{$newClassId}:{$cleanName}] — continuing without fee_structure_id.");
+                        // No month in item — use payment_date month
+                        $billingMonth = (int) Carbon::parse($paymentDate)->format('n');
                     }
                 }
 
-                $billingMonth = null;
-                $billingYear  = (string) $paymentYear;
+                // ── Lookup fee_structure_id ────────────────────────────
+                $feeStructureId = null;
+                if ($newClassId) {
+                    $feeKey = $newClassId . ':' . $cleanName;
+                    $feeStructureId = $this->feeMap[$feeKey] ?? null;
 
-                if ($feeFrequency === 'monthly') {
-                    // Monthly fees use the payment month
-                    $billingMonth = $paymentMonth;
-                } elseif ($feeFrequency === 'half_yearly') {
-                    // Half-yearly fees are either for H1 (Jan-Jun) or H2 (Jul-Dec)
-                    $billingMonth = ($paymentMonth <= 6) ? 6 : 12;
+                    if (!$feeStructureId) {
+                        $this->command->warn("    ⚠ Fee not in map: [{$feeKey}] (payment id={$old['id']}, item='{$rawName}') — inserting with null fee_structure_id.");
+                    }
                 }
-                // For 'one_time' or other frequencies, billingMonth remains null.
 
-                // Problem 6: Always suffix with idx+1 for uniqueness within a payment
-                $receiptNumber = $receiptBase . '-' . ($idx + 1);
+                // ── Receipt number — unique per fee line ───────────────
+                $receiptNumber = $receiptBase;
+
+                // ── Duplicate guard (same student + fee_structure + month + year) ─
+                $dupeKey = "{$newStudentId}:{$feeStructureId}:{$billingMonth}:{$billingYear}:{$cleanName}";
+                if (isset($seen[$dupeKey])) {
+                    $this->command->warn("    ⚠ Duplicate detected for student={$old['student_id']}, fee='{$cleanName}', month={$billingMonth}/{$billingYear} — skipping payment id={$old['id']}.");
+                    $skipped++;
+                    continue;
+                }
+                $seen[$dupeKey] = true;
 
                 Payment::firstOrCreate(
-                    ['receipt_number' => $receiptNumber],
+                    ['receipt_number' => $receiptNumber, 'fee_type' => $cleanName],
                     [
                         'student_id'       => $newStudentId,
                         'fee_structure_id' => $feeStructureId,
                         'fee_type'         => $cleanName,
-                        'amount'           => $item['amount'] ?? 0,
+                        'amount'           => $amount,
                         'payment_method'   => $paymentMethod,
                         'payment_date'     => $paymentDate,
                         'billing_month'    => $billingMonth,
                         'billing_year'     => $billingYear,
-                        'remarks'          => $old['note'] ?: 'Migrated from old system',
+                        'remarks'          => !empty($old['note']) ? $old['note'] : 'Migrated from old system',
                         'status'           => 'completed',
                         'received_by'      => 1,
                     ]
@@ -721,6 +891,16 @@ class OldDataMigrationSeeder extends Seeder
             }
         }
 
-        $this->command->info("  → {$count} payment rows migrated.");
+        $this->command->info("  → {$count} payment rows migrated. {$skipped} skipped.");
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Helper — strip month suffix from fee name
+    // "Monthly Tuition Fee - January, 26" → "Monthly Tuition Fee"
+    // "Drawing & Crafting Fee - 1st Half" → "Drawing & Crafting Fee"
+    // ──────────────────────────────────────────────────────────────────────
+    private function stripMonthSuffix(string $name): string
+    {
+        return trim(preg_replace('/\s*-\s*.+$/', '', $name));
     }
 }
