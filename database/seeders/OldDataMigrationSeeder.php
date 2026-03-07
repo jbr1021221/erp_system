@@ -273,6 +273,7 @@ class OldDataMigrationSeeder extends Seeder
         $this->command->info('Starting old-project data migration…');
 
         DB::transaction(function () {
+            $this->step0_wipeData();          // Problem 5: idempotency wipe
             $this->step1_migrateUsers();
             $this->step2_migrateClasses();
             $this->step3_migrateSections();
@@ -283,6 +284,22 @@ class OldDataMigrationSeeder extends Seeder
         });
 
         $this->command->info('Migration complete!');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // STEP 0 — Wipe (idempotency)
+    // Clears students/payments/fee-assignments so the seeder can be re-run
+    // safely. Classes, sections, and fee_structures are left intact.
+    // ─────────────────────────────────────────────────────────────────────
+    private function step0_wipeData(): void
+    {
+        $this->command->info('[0/7] Wiping existing migrated data…');
+
+        StudentFeeAssignment::query()->delete();
+        Payment::query()->delete();
+        Student::withTrashed()->forceDelete();
+
+        $this->command->info('  → Wipe complete. Classes/sections/fee_structures preserved.');
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -433,6 +450,22 @@ class OldDataMigrationSeeder extends Seeder
     {
         $this->command->info('[5/7] Migrating students…');
 
+        // Problem 1: Build class-code lookup for student_id formula
+        $classCodeMap = [];
+        foreach ($this->OLD_CLASSROOMS as $classroom) {
+            $classCodeMap[$classroom['id']] = $classroom['class_id']; // e.g. 1 => '786'
+        }
+
+        // Problem 7: Pre-index earliest payment date per old student_id
+        $earliestPayment = [];
+        foreach ($this->OLD_PAYMENTS as $p) {
+            $sid  = $p['student_id'];
+            $date = $p['payment_date'] ?? null;
+            if ($date && (!isset($earliestPayment[$sid]) || $date < $earliestPayment[$sid])) {
+                $earliestPayment[$sid] = $date;
+            }
+        }
+
         foreach ($this->OLD_STUDENTS as $old) {
             $nameParts = explode(' ', trim($old['name']), 2);
             $firstName = $nameParts[0];
@@ -441,22 +474,37 @@ class OldDataMigrationSeeder extends Seeder
             $newSectionId = $this->sectionMap[$old['class_id'] . ':' . ($old['section'] ?? '')] ?? null;
             $newClassId   = $this->classMap[$old['class_id']] ?? null;
 
+            // Problem 1: Correct student_id format: '26' + classCode + zero-padded old id
+            $classCode = $classCodeMap[$old['class_id']] ?? '000';
+            $studentId = '26' . $classCode . str_pad($old['id'], 3, '0', STR_PAD_LEFT);
+
+            // Problem 7: Derive enrollment_date from earliest payment date
+            $enrollmentDate = $earliestPayment[$old['id']]
+                ?? $old['enrollment_date']
+                ?? date('Y') . '-01-01';
+
             $student = Student::updateOrCreate(
-                ['student_id' => $old['student_id']],
+                ['student_id' => $studentId],
                 [
                     'first_name'     => $firstName,
                     'last_name'      => $lastName,
-                    'date_of_birth'  => ! empty($old['dob']) ? $old['dob'] : '2010-01-01',
+                    'date_of_birth'  => !empty($old['dob']) ? $old['dob'] : '2010-01-01',
                     'gender'         => strtolower($old['gender'] ?? 'male'),
-                    'email'          => ! empty($old['email']) ? $old['email'] : null,
-                    'phone'          => ! empty($old['father_mobile']) ? $old['father_mobile'] : '00000000000',
+                    'email'          => !empty($old['email']) ? $old['email'] : null,
+                    'phone'          => !empty($old['father_mobile']) ? $old['father_mobile'] : '00000000000',
                     'address'        => $old['address'] ?? null,
+                    // Problem 8: guardian_name maps to father_name; also store father/mother explicitly
                     'guardian_name'  => $old['father_name'] ?? '',
                     'guardian_phone' => $old['father_mobile'] ?? '',
+                    'father_name'    => $old['father_name'] ?? '',
+                    'mother_name'    => $old['mother_name'] ?? '',
+                    'mother_mobile'  => $old['mother_mobile'] ?? '',
                     'class_id'       => $newClassId,
                     'section_id'     => $newSectionId,
-                    'enrollment_date'=> $old['enrollment_date'] ?? now()->toDateString(),
+                    'enrollment_date'=> $enrollmentDate,
                     'status'         => $old['status'] ?? 'active',
+                    'program_type'   => $old['program_type'] ?? null,
+                    'shift'          => $old['shift'] ?? null,
                 ]
             );
 
@@ -577,51 +625,95 @@ class OldDataMigrationSeeder extends Seeder
     //        matches the FeeStructure fee_type exactly.
     //
     // FIX D: payment_method normalised through $PAYMENT_METHOD_MAP.
+    //
+    // FIX E: Billing month logic refined:
+    //        1. Resolve fee_structure_id FIRST, then use its frequency.
+    //        2. One-time fees always get billing_month=null.
+    //        3. Half-yearly fees get billing_month=6 or 12 based on payment month.
+    //        4. Monthly fees use the payment's month directly.
     // ─────────────────────────────────────────────────────────────────────
     private function step7_migratePayments(): void
     {
         $this->command->info('[7/7] Migrating payments…');
 
+        // Problem 2: Month name → integer
+        $monthMap = [
+            'January'=>1,'February'=>2,'March'=>3,'April'=>4,
+            'May'=>5,'June'=>6,'July'=>7,'August'=>8,
+            'September'=>9,'October'=>10,'November'=>11,'December'=>12,
+        ];
+
         $count = 0;
         foreach ($this->OLD_PAYMENTS as $old) {
             $newStudentId = $this->studentMap[$old['student_id']] ?? null;
-            if (! $newStudentId) continue;
+            if (!$newStudentId) continue;
 
-            // Deterministic receipt number — safe for re-runs
+            // Need the student's class_id for feeMap lookup
+            $student    = Student::find($newStudentId);
+            $newClassId = $student->class_id ?? null;
+
             $receiptBase   = 'MIG-' . str_pad($old['id'], 5, '0', STR_PAD_LEFT);
             $paymentMethod = $this->PAYMENT_METHOD_MAP[$old['payment_mode'] ?? ''] ?? 'cash';
             $paymentDate   = $old['payment_date'] ?? now()->toDateString();
+            $paymentCarbon = Carbon::parse($paymentDate);
+            $paymentMonth  = $paymentCarbon->month;
+            $paymentYear   = $paymentCarbon->year;
 
             $feeDetails = json_decode($old['fee_details'] ?? '[]', true) ?? [];
             if (empty($feeDetails)) {
+                // Fallback for payments without detailed fee breakdown
                 $feeDetails = [['fee_name' => 'Fee', 'amount' => $old['amount'] ?? 0]];
             }
 
             foreach ($feeDetails as $idx => $item) {
-                // FIX A: support both "fee_name" (old) and "name" (new)
+                // Support both "fee_name" (old data) and "name" (new data)
                 $rawName = $item['fee_name'] ?? $item['name'] ?? 'Fee';
 
-                // FIX C: strip " - Month, YY" suffix from monthly fee names
-                // e.g. "Monthly Tuition Fee - January, 26" → "Monthly Tuition Fee"
-                $feeType = preg_replace('/\s*-\s*[A-Za-z]+,?\s*\d{2,4}$/', '', $rawName);
-                $feeType = trim($feeType);
+                // Strip " - Month, YY" suffix  e.g. "Monthly Tuition Fee - January, 26" → "Monthly Tuition Fee"
+                $cleanName = preg_replace('/\s*-\s*[A-Za-z]+,?\s*\d{2,4}$/', '', $rawName);
+                $cleanName = trim($cleanName);
 
-                // Make receipt unique per fee line within the same payment
-                $receiptNumber = $receiptBase . ($idx > 0 ? '-' . ($idx + 1) : '');
+                $feeStructureId = null;
+                $feeFrequency   = null;
+                if ($newClassId) {
+                    $feeStructureId = $this->feeMap[$newClassId . ':' . $cleanName] ?? null;
+                    if ($feeStructureId) {
+                        $feeStructure = FeeStructure::find($feeStructureId);
+                        $feeFrequency = $feeStructure->frequency ?? null;
+                    } else {
+                        $this->command->warn("    ⚠ FeeStructure not found for: [{$newClassId}:{$cleanName}] — continuing without fee_structure_id.");
+                    }
+                }
+
+                $billingMonth = null;
+                $billingYear  = (string) $paymentYear;
+
+                if ($feeFrequency === 'monthly') {
+                    // Monthly fees use the payment month
+                    $billingMonth = $paymentMonth;
+                } elseif ($feeFrequency === 'half_yearly') {
+                    // Half-yearly fees are either for H1 (Jan-Jun) or H2 (Jul-Dec)
+                    $billingMonth = ($paymentMonth <= 6) ? 6 : 12;
+                }
+                // For 'one_time' or other frequencies, billingMonth remains null.
+
+                // Problem 6: Always suffix with idx+1 for uniqueness within a payment
+                $receiptNumber = $receiptBase . '-' . ($idx + 1);
 
                 Payment::firstOrCreate(
+                    ['receipt_number' => $receiptNumber],
                     [
-                        'receipt_number' => $receiptNumber,
-                        'fee_type'       => $feeType,
-                    ],
-                    [
-                        'student_id'     => $newStudentId,
-                        'amount'         => $item['amount'] ?? 0,
-                        'payment_date'   => $paymentDate,
-                        'payment_method' => $paymentMethod,
-                        'remarks'        => $old['note'] ?: 'Migrated from old system',
-                        'status'         => 'completed',
-                        'received_by'    => 1,
+                        'student_id'       => $newStudentId,
+                        'fee_structure_id' => $feeStructureId,
+                        'fee_type'         => $cleanName,
+                        'amount'           => $item['amount'] ?? 0,
+                        'payment_method'   => $paymentMethod,
+                        'payment_date'     => $paymentDate,
+                        'billing_month'    => $billingMonth,
+                        'billing_year'     => $billingYear,
+                        'remarks'          => $old['note'] ?: 'Migrated from old system',
+                        'status'           => 'completed',
+                        'received_by'      => 1,
                     ]
                 );
 
