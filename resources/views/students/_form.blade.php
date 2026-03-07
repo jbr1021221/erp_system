@@ -43,7 +43,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Class *</label>
-          <select name="class_id" required style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">>
+          <select id="studentClass" name="class_id" required style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">>
             <option value="">Select Class</option>
             @foreach($classes ?? [] as $class)
               <option value="{{ $class->id }}" {{ old('class_id', $student->class_id ?? '') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
@@ -53,11 +53,8 @@
         </div>
         <div>
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Section</label>
-          <select name="section_id" style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
-            <option value="">Select Section</option>
-            @foreach($sections ?? [] as $section)
-              <option value="{{ $section->id }}" {{ old('section_id', $student->section_id ?? '') == $section->id ? 'selected' : '' }}>{{ $section->name }}</option>
-            @endforeach
+          <select id="studentSection" name="section_id" style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;opacity:0.5;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'" disabled>
+            <option value="">— Select Class first —</option>
           </select>
         </div>
         <x-form-field name="enrollment_date" label="Enrollment Date *" type="date" :value="old('enrollment_date', isset($student) ? \Carbon\Carbon::parse($student->enrollment_date)->format('Y-m-d') : date('Y-m-d'))" required />
@@ -140,3 +137,47 @@
 
   </div>
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    const allSections   = {!! json_encode($sections->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'class_id' => $s->class_id])->values()->toArray()) !!};
+    const preselectedId = {{ old('section_id', $student->section_id ?? 'null') }};
+
+    const $classEl   = document.getElementById('studentClass');
+    const $sectionEl = document.getElementById('studentSection');
+
+    function populateSections(classId, selectedId) {
+        const filtered = allSections.filter(function(s) { return s.class_id == classId; });
+        $sectionEl.innerHTML = '<option value="">Select Section</option>';
+
+        if (!classId || filtered.length === 0) {
+            $sectionEl.disabled = true;
+            $sectionEl.style.opacity = '0.5';
+            return;
+        }
+
+        filtered.forEach(function(s) {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name;
+            if (selectedId && s.id == selectedId) opt.selected = true;
+            $sectionEl.appendChild(opt);
+        });
+
+        $sectionEl.disabled = false;
+        $sectionEl.style.opacity = '1';
+    }
+
+    // On page load: populate sections if a class is already selected (edit / old())
+    if ($classEl.value) {
+        populateSections($classEl.value, preselectedId);
+    }
+
+    // Re-populate when the class changes
+    $classEl.addEventListener('change', function () {
+        populateSections(this.value, null);
+    });
+})();
+</script>
+@endpush
