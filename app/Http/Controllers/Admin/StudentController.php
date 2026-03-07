@@ -59,8 +59,9 @@ class StudentController extends Controller implements HasMiddleware
 
     public function create()
     {
-        $classes = Classes::where('is_active', true)->orderBy('name')->get();
-        return view('students.create', compact('classes'));
+        $classes  = Classes::where('is_active', true)->orderBy('name')->get();
+        $sections = \App\Models\Section::orderBy('name')->get();
+        return view('students.create', compact('classes', 'sections'));
     }
 
     public function store(Request $request)

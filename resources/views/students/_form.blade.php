@@ -11,7 +11,8 @@
         <h2 style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--text-primary);">Personal Information</h2>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <x-form-field name="name" label="Full Name *" type="text" :value="old('name', $student->name ?? '')" placeholder="e.g. Ahmed Abdullah" required />
+        <x-form-field name="first_name" label="First Name *" type="text" :value="old('first_name', $student->first_name ?? '')" placeholder="e.g. Ahmed" required />
+        <x-form-field name="last_name" label="Last Name *" type="text" :value="old('last_name', $student->last_name ?? '')" placeholder="e.g. Abdullah" required />
         <x-form-field name="student_id" label="Student ID" type="text" :value="old('student_id', $student->student_id ?? '')" placeholder="Auto-generated if empty" />
         <x-form-field name="date_of_birth" label="Date of Birth" type="date" :value="old('date_of_birth', isset($student) ? \Carbon\Carbon::parse($student->date_of_birth)->format('Y-m-d') : '')" />
         <div>
@@ -50,9 +51,16 @@
           </select>
           @error('class_id')<p style="font-size:11px;color:var(--accent);margin-top:4px;">{{ $message }}</p>@enderror
         </div>
-        <x-form-field name="section" label="Section" type="text" :value="old('section', $student->section ?? '')" placeholder="e.g. A" />
-        <x-form-field name="roll_number" label="Roll Number" type="number" :value="old('roll_number', $student->roll_number ?? '')" placeholder="e.g. 12" />
-        <x-form-field name="admission_date" label="Admission Date *" type="date" :value="old('admission_date', isset($student) ? \Carbon\Carbon::parse($student->admission_date)->format('Y-m-d') : date('Y-m-d'))" required />
+        <div>
+          <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Section</label>
+          <select name="section_id" style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">
+            <option value="">Select Section</option>
+            @foreach($sections ?? [] as $section)
+              <option value="{{ $section->id }}" {{ old('section_id', $student->section_id ?? '') == $section->id ? 'selected' : '' }}>{{ $section->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <x-form-field name="enrollment_date" label="Enrollment Date *" type="date" :value="old('enrollment_date', isset($student) ? \Carbon\Carbon::parse($student->enrollment_date)->format('Y-m-d') : date('Y-m-d'))" required />
         <div>
           <label style="font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:6px;">Status</label>
           <select name="status" style="width:100%;height:50px;padding:0 14px;border:1px solid var(--border-color);border-radius:12px;font-size:14px;background:var(--bg-surface);color:var(--text-primary);outline:none;cursor:pointer;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border-color)'">>
