@@ -260,7 +260,7 @@ $(function () {
 
         if (!sectionId) return;
 
-        const students = allStudents.filter(s => s.class_id == classId && s.section_id === sectionId);
+        const students = allStudents.filter(s => s.class_id == classId && s.section_id == sectionId);
         const $stu = $('#filterStudent').empty().append('<option value="">— Select Student —</option>');
         $.each(students, (_, s) => $stu.append(`<option value="${s.id}">${s.name} (${s.student_id})</option>`));
         enableSelect($stu);
