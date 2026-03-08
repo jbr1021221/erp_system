@@ -81,7 +81,7 @@ class PaymentController extends Controller implements HasMiddleware
      */
     public function create(Request $request)
     {
-        $classes  = \App\Models\Classes::orderBy('name')->get();
+$classes = \App\Models\Classes::whereHas('students', fn($q) => $q->where('status', 'active'))->orderBy('name')->get();
         $sections = \App\Models\Section::orderBy('name')->get();
         $students = Student::with(['class', 'section'])
                         ->active()
