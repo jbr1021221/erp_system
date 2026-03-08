@@ -147,6 +147,7 @@
 .stat-card.c-tl::after   { background: linear-gradient(90deg, var(--tl), #22d3ee); }
 .stat-card.c-blue::after { background: linear-gradient(90deg, #2563eb, #60a5fa); }
 .stat-card.c-rose::after { background: linear-gradient(90deg, #e11d48, #fb7185); }
+.stat-card.c-indigo::after { background: linear-gradient(90deg, #4f46e5, #818cf8); }
 .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 34px rgba(0,0,0,0.1); }
 
 .s-label {
@@ -186,6 +187,7 @@
 .s-icon.tl   { background: rgba(13,148,136,0.1); }
 .s-icon.blue { background: rgba(37,99,235,0.1); }
 .s-icon.rose { background: rgba(225,29,72,0.1); }
+.s-icon.indigo { background: rgba(79, 70, 229, 0.1); }
 
 /* ── PANELS ── */
 .panel {
@@ -414,25 +416,22 @@
     <div style="font-size:11px;color:var(--text-muted);">Collected today from payments</div>
   </div>
 
-  <div class="stat-card c-rose au d4">
+  <div class="stat-card c-indigo au d4">
     <div class="flex items-start justify-between mb-3">
       <div>
-        <div class="s-label">Outstanding Fees</div>
-        <div class="s-value lg">৳{{ number_format($stats['total_outstanding']) }}</div>
+        <div class="s-label">Total Classes</div>
+        <div class="s-value xl">{{ $stats['total_classes'] }}</div>
       </div>
-      <div class="s-icon rose">
-        <svg width="20" height="20" fill="none" stroke="#e11d48" stroke-width="1.8" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      <div class="s-icon indigo">
+        <svg width="20" height="20" fill="none" stroke="#4f46e5" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
       </div>
     </div>
-    @if($stats['pending_expenses'] > 0)
-      <a href="{{ route('payments.index', ['status' => 'pending']) }}" style="font-size:11px;font-weight:700;color:#e11d48;text-decoration:none;">
-        {{ $stats['pending_expenses'] }} pending expenses →
-      </a>
-    @else
-      <span style="font-size:11px;color:var(--em);font-weight:700;">✓ No pending expenses</span>
-    @endif
+    <div style="font-size:11px;color:var(--text-muted);">
+      <a href="{{ route('classes.index') }}" style="color:#4f46e5;text-decoration:none;font-weight:700;">View management →</a>
+    </div>
   </div>
 </div>
 
