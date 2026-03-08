@@ -41,11 +41,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('students', StudentController::class);
     Route::get('students/{student}/admission-form', [StudentController::class, 'admissionForm'])->name('students.admission-form');
     
-    // Multi-step Admission Process
-    Route::get('students/{student}/select-fees', [StudentController::class, 'selectFees'])->name('students.select-fees');
-    Route::post('students/{student}/store-fees', [StudentController::class, 'storeFees'])->name('students.store-fees');
-    Route::get('students/{student}/admission-payment', [StudentController::class, 'admissionPayment'])->name('students.admission-payment');
-    Route::post('students/{student}/store-admission-payment', [StudentController::class, 'storeAdmissionPayment'])->name('students.store-admission-payment');
+    // Multi-step Admission Process (4 Steps)
+    Route::get('students/{student}/fee-payment', [StudentController::class, 'showFeePayment'])->name('students.fee-payment');
+    Route::post('students/{student}/fee-payment', [StudentController::class, 'storeFeePayment'])->name('students.store-fee-payment');
     Route::get('students/{student}/admission-preview', [StudentController::class, 'admissionPreview'])->name('students.admission-preview');
     Route::get('students/{student}/admission-complete', [StudentController::class, 'admissionComplete'])->name('students.admission-complete');
     

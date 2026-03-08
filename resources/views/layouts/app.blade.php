@@ -75,12 +75,12 @@
           <svg class="{{ request()->routeIs('students.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           Students
         </a>
-        {{-- COMMENTED OUT — Classes sidebar link: not wired to sidebar yet
+        @can('class-list')
         <a href="{{ route('classes.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium mt-1 {{ request()->routeIs('classes.*') ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 relative before:content-[\'\'] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:bg-emerald-600 before:rounded-full' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white' }}">
           <svg class="{{ request()->routeIs('classes.*') ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400' }} size-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
           Classes
         </a>
-        --}}
+        @endcan
       </div>
 
       {{-- FINANCE --}}

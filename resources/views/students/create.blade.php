@@ -9,6 +9,47 @@
 
 @section('content')
 
+{{-- Progress Steps (4 Steps) --}}
+<div class="mb-8 max-w-6xl mx-auto px-4">
+    <div class="flex items-center justify-between w-full relative">
+        <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-10"></div>
+        <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-emerald-500 -z-10" style="width: 0%;"></div>
+        
+        <!-- Step 1 -->
+        <div class="relative flex flex-col items-center group">
+            <div class="h-10 w-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
+                1
+            </div>
+            <div class="absolute top-12 w-32 text-center text-xs font-bold text-emerald-600">Basic Info</div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="relative flex flex-col items-center group">
+            <div class="h-10 w-10 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center text-slate-500 font-bold border-4 border-white shadow transition-colors">
+                2
+            </div>
+            <div class="absolute top-12 w-32 text-center text-xs font-medium text-slate-500">Fee & Payment</div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="relative flex flex-col items-center group">
+            <div class="h-10 w-10 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center text-slate-500 font-bold border-4 border-white shadow transition-colors">
+                3
+            </div>
+            <div class="absolute top-12 w-32 text-center text-xs font-medium text-slate-500">Preview</div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="relative flex flex-col items-center group">
+            <div class="h-10 w-10 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center text-slate-500 font-bold border-4 border-white shadow transition-colors">
+                4
+            </div>
+            <div class="absolute top-12 w-32 text-center text-xs font-medium text-slate-500">Complete</div>
+        </div>
+    </div>
+    <div class="h-8"></div>
+</div>
+
 {{-- Page Header --}}
 <div class="flex items-center justify-between mb-6 animate-in">
   <div>

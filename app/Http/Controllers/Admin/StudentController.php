@@ -10,6 +10,7 @@ use App\Models\StudentFeeAssignment;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -91,8 +92,8 @@ class StudentController extends Controller implements HasMiddleware
 
         $student = Student::create($validated);
 
-        return redirect()->route('students.select-fees', $student)
-            ->with('success', 'Student information saved. Please select applicable fees.');
+        return redirect()->route('students.fee-payment', $student)
+            ->with('success', 'Student information saved. Now configure fees and initial payment.');
     }
 
     public function show(Student $student)
@@ -214,86 +215,66 @@ foreach ($feeStructures as $fee) {
         return view('students.admission-form', compact('student'));
     }
 
-    public function selectFees(Student $student)
+    public function showFeePayment(Student $student)
     {
         $student->load(['class.feeStructures', 'feeAssignments']);
         $feeStructures = $student->class->feeStructures ?? collect();
-        return view('students.select-fees', compact('student', 'feeStructures'));
+        return view('students.fee-payment', compact('student', 'feeStructures'));
     }
 
-    public function storeFees(Request $request, Student $student)
+    public function storeFeePayment(Request $request, Student $student)
     {
         $validated = $request->validate([
-            'fees'          => 'required|array|min:1',
-            'fees.*'        => 'exists:fee_structures,id',
-            'discount_type' => 'array',
-            'discount_type.*' => 'in:none,percentage,fixed',
-            'discount_value'  => 'array',
-            'discount_value.*'=> 'nullable|numeric|min:0',
-            'is_permanent'    => 'array',
-        ]);
-
-        $student->feeAssignments()->delete();
-
-        foreach ($validated['fees'] as $feeId) {
-            StudentFeeAssignment::create([
-                'student_id'       => $student->id,
-                'fee_structure_id' => $feeId,
-                'discount_type'    => $request->input("discount_type.{$feeId}", 'none'),
-                'discount_value'   => $request->input("discount_value.{$feeId}", 0) ?: 0,
-                'is_permanent'     => $request->has("is_permanent.{$feeId}"),
-            ]);
-        }
-
-        return redirect()->route('students.admission-payment', $student)
-            ->with('success', 'Fees selected. Please process admission payment.');
-    }
-
-    public function admissionPayment(Student $student)
-    {
-        $student->load(['class', 'feeAssignments.feeStructure']);
-
-        $admissionFee = $student->feeAssignments()
-            ->whereHas('feeStructure', fn($q) => $q->where('fee_type', 'like', '%admission%'))
-            ->with('feeStructure')
-            ->first();
-
-        $otherFees = $student->feeAssignments()
-            ->whereHas('feeStructure', fn($q) => $q->where('fee_type', 'not like', '%admission%'))
-            ->with('feeStructure')
-            ->get();
-
-        return view('students.admission-payment', compact('student', 'admissionFee', 'otherFees'));
-    }
-
-    public function storeAdmissionPayment(Request $request, Student $student)
-    {
-        $validated = $request->validate([
+            'fees'           => 'required|array|min:1',
+            'fees.*'         => 'exists:fee_structures,id',
+            'discount_type'  => 'array',
+            'discount_value' => 'array',
+            'is_permanent'   => 'array',
+            // Payment fields
             'payment_amount' => 'required|numeric|min:0',
             'payment_method' => 'required|in:cash,bank_transfer,cheque,online',
             'payment_date'   => 'required|date',
             'notes'          => 'nullable|string',
         ]);
 
-        $feeStructure = \App\Models\FeeStructure::find($request->input('fee_structure_id'));
+        DB::transaction(function () use ($request, $student, $validated) {
+            // 1. Save Fee Assignments
+            $student->feeAssignments()->delete();
+            foreach ($validated['fees'] as $feeId) {
+                StudentFeeAssignment::create([
+                    'student_id'       => $student->id,
+                    'fee_structure_id' => $feeId,
+                    'discount_type'    => $request->input("discount_type.{$feeId}", 'none'),
+                    'discount_value'   => $request->input("discount_value.{$feeId}", 0) ?: 0,
+                    'is_permanent'     => $request->has("is_permanent.{$feeId}"),
+                ]);
+            }
 
-        Payment::create([
-            'student_id'       => $student->id,
-            'amount'           => $validated['payment_amount'],
-            'payment_method'   => $validated['payment_method'],
-            'payment_date'     => $validated['payment_date'],
-            'billing_month'    => null,
-            'billing_year'     => date('Y'),
-            'fee_structure_id' => $request->input('fee_structure_id'),
-            'fee_type'         => $feeStructure?->fee_type ?? 'Admission Fee',
-            'remarks'          => $validated['notes'] ?? 'Admission payment',
-            'status'           => 'completed',
-            'receipt_number'   => 'ADM-' . date('Ymd') . '-' . strtoupper(uniqid()),
-            'received_by'      => auth()->id(),
-        ]);
+            // 2. Save Payment (usually against the Admission Fee if selected)
+            $admissionFeeId = \App\Models\FeeStructure::whereIn('id', $validated['fees'])
+                ->where('fee_type', 'like', '%admission%')
+                ->first()?->id;
+
+            if ($validated['payment_amount'] > 0) {
+                Payment::create([
+                    'student_id'       => $student->id,
+                    'amount'           => $validated['payment_amount'],
+                    'payment_method'   => $validated['payment_method'],
+                    'payment_date'     => $validated['payment_date'],
+                    'billing_month'    => null,
+                    'billing_year'     => date('Y'),
+                    'fee_structure_id' => $admissionFeeId,
+                    'fee_type'         => $admissionFeeId ? \App\Models\FeeStructure::find($admissionFeeId)->fee_type : 'Admission Fee',
+                    'remarks'          => $validated['notes'] ?? 'Initial admission payment',
+                    'status'           => 'completed',
+                    'receipt_number'   => 'ADM-' . date('Ymd') . '-' . strtoupper(uniqid()),
+                    'received_by'      => auth()->id(),
+                ]);
+            }
+        });
 
         return redirect()->route('students.admission-preview', $student)
-            ->with('success', 'Payment recorded. Please review admission form.');
+            ->with('success', 'Fees and payment recorded successfully.');
     }
 
     public function admissionPreview(Student $student)

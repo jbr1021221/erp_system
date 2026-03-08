@@ -12,48 +12,40 @@
 @section('content')
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Progress Steps -->
+        <!-- Progress Steps (4 Steps) -->
         <div class="mb-8 print:hidden">
             <div class="flex items-center justify-between w-full relative">
                 <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-10"></div>
-                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-indigo-200 -z-10" style="width: 75%;"></div>
+                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-emerald-500 -z-10" style="width: 66.66%;"></div>
                 
                 <!-- Step 1 -->
                 <div class="relative flex flex-col items-center group">
-                    <div class="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
+                    <div class="h-10 w-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-green-600">Basic Info</div>
+                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-emerald-600">Basic Info</div>
                 </div>
 
                 <!-- Step 2 -->
                 <div class="relative flex flex-col items-center group">
-                    <div class="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
+                    <div class="h-10 w-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-green-600">Select Fees</div>
+                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-emerald-600">Fee & Payment</div>
                 </div>
 
                 <!-- Step 3 -->
                 <div class="relative flex flex-col items-center group">
-                    <div class="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <div class="h-10 w-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
+                        3
                     </div>
-                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-green-600">Payment</div>
+                    <div class="absolute top-12 w-32 text-center text-xs font-bold text-emerald-600">Preview</div>
                 </div>
 
                 <!-- Step 4 -->
                 <div class="relative flex flex-col items-center group">
-                    <div class="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
-                        4
-                    </div>
-                    <div class="absolute top-12 w-32 text-center text-xs font-bold text-indigo-600">Preview</div>
-                </div>
-
-                <!-- Step 5 -->
-                <div class="relative flex flex-col items-center group">
                     <div class="h-10 w-10 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center text-slate-500 font-bold border-4 border-white shadow transition-colors">
-                        5
+                        4
                     </div>
                     <div class="absolute top-12 w-32 text-center text-xs font-medium text-slate-500">Complete</div>
                 </div>
@@ -68,13 +60,13 @@
                     📄 Preview Admission Form
                 </h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    Review details before finalizing admission.
+                    Review details before finalizing admission for <span class="font-bold">{{ $student->first_name }} {{ $student->last_name }}</span>.
                 </p>
             </div>
             <div class="flex gap-3">
-                 <a href="{{ route('students.admission-payment', $student) }}" 
+                 <a href="{{ route('students.fee-payment', $student) }}" 
                    class="inline-flex items-center px-4 py-2 border border-slate-300 rounded-xl shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50">
-                    Back to Payment
+                    Back to Fees
                 </a>
                 <a href="{{ route('students.admission-complete', $student) }}" 
                    class="inline-flex items-center px-6 py-3 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform hover:-translate-y-0.5 transition-all duration-200">

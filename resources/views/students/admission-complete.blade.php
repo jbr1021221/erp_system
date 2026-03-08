@@ -12,7 +12,7 @@
 @section('content')
 <div class="py-6 no-print">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Progress Steps -->
+        <!-- Progress Steps (4 Steps) -->
         <div class="mb-8">
             <div class="flex items-center justify-between w-full relative">
                 <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-10"></div>
@@ -31,7 +31,7 @@
                     <div class="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-green-600">Select Fees</div>
+                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-green-600">Fee & Payment</div>
                 </div>
 
                 <!-- Step 3 -->
@@ -39,23 +39,15 @@
                     <div class="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-green-600">Payment</div>
+                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-green-600">Preview</div>
                 </div>
 
                 <!-- Step 4 -->
                 <div class="relative flex flex-col items-center group">
-                    <div class="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <div class="h-10 w-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
+                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <div class="absolute top-12 w-32 text-center text-xs font-semibold text-green-600">Preview</div>
-                </div>
-
-                <!-- Step 5 -->
-                <div class="relative flex flex-col items-center group">
-                    <div class="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold border-4 border-white shadow transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                    <div class="absolute top-12 w-32 text-center text-xs font-bold text-indigo-600">Complete</div>
+                    <div class="absolute top-12 w-32 text-center text-xs font-bold text-emerald-600">Complete</div>
                 </div>
             </div>
             <div class="h-8"></div> <!-- Spacer for labels -->
@@ -69,7 +61,7 @@
             </div>
             <h2 class="text-3xl font-bold text-slate-800">Admission Completed Successfully!</h2>
             <p class="mt-2 text-lg text-slate-600">
-                Student <span class="font-bold">{{ $student->full_name }}</span> has been admitted to Class <span class="font-bold">{{ $student->class->name ?? 'N/A' }}</span>.
+                Student <span class="font-bold">{{ $student->first_name }} {{ $student->last_name }}</span> has been admitted to Class <span class="font-bold">{{ $student->class->name ?? 'N/A' }}</span>.
             </p>
         </div>
 
